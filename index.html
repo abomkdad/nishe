@@ -24,7 +24,6 @@
             padding: 0; 
             background-color: var(--background-color); 
             color: #333; 
-            /* مساحة إضافية للسلة الثابتة */
             padding-bottom: 120px; 
             min-height: 100vh;
         }
@@ -64,7 +63,7 @@
         .perfume-carousel::-webkit-scrollbar { display: none; }
         
         .perfume-item { 
-            flex: 0 0 150px; /* ثابتة العرض للجوال */
+            flex: 0 0 150px;
             border: 1px solid #ddd; padding: 8px; text-align: center; background: #fff; border-radius: 6px; 
             transition: transform 0.2s; 
         }
@@ -79,16 +78,14 @@
 
         /* تصميم العربة الثابتة */
         #cart-container {
-            position: fixed; /* تثبيت في أسفل الشاشة */
+            position: fixed; 
             bottom: 0;
             left: 0;
             right: 0;
             width: 100%;
             z-index: 1000;
             background-color: white;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-            border-top: 1px solid #ddd;
-            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -4px 10px rgba(0,0 dreaded failure to load items 
         }
 
         #cart-summary { 
@@ -125,7 +122,7 @@
         .delete-item {
             cursor: pointer;
             color: var(--delete-color);
-            margin-left: 5px; /* تم تعديل الاتجاه ليلائم اليمين لليسار */
+            margin-left: 5px;
             font-size: 1em;
             opacity: 0.7;
             transition: opacity 0.2s;
@@ -157,7 +154,7 @@
         #floating-whatsapp {
             position: fixed;
             bottom: 110px;
-            left: 15px; /* يظهر على اليسار في RTL */
+            left: 15px;
             background-color: var(--whatsapp-color);
             color: white;
             padding: 8px 12px;
@@ -185,7 +182,7 @@
             border: 1px solid #c8e6c9;
         }
 
-        /* تعديلات اللغة (HE) */
+        /* تعديلات اللغة */
         [lang="he"] { direction: rtl; }
         [lang="he"] #floating-whatsapp { left: auto; right: 15px; }
         [lang="he"] #floating-whatsapp i { margin-left: 8px; margin-right: 0; }
@@ -260,7 +257,7 @@
                 msg_no_offer: 'لم يتم تطبيق عرض.',
                 type_men_prefix: 'رجالي: ',
                 type_woman_prefix: 'نسائي: ',
-                error_loading: 'عذراً، لم نتمكن من تحميل بيانات العطور. يرجى التحقق من رابط الشيت أو اتصالك بالإنترنت.'
+                error_loading: 'عذراً، لم نتمكن من تحميل بيانات العطور. يرجى التأكد من أن رابط الشيت منشور بشكل صحيح.'
             },
             he: {
                 title: '✨ מבצעי בישום יוקרתיים! ✨',
@@ -283,7 +280,7 @@
                 msg_no_offer: 'לא הוחל מבצע.',
                 type_men_prefix: 'גבר: ',
                 type_woman_prefix: 'אישה: ',
-                error_loading: 'אנו מצטערים, לא הצלחנו לטעון את נתוני הבשמים. אנא בדוק את החיבור שלך.'
+                error_loading: 'אנו מצטערים, לא הצלחנו לטעון את נתוני הבשמים. אנא ודא שהקישור לגליון הנתונים פעיל ופורסם.'
             }
         };
 
@@ -461,6 +458,7 @@
             document.getElementById('whatsapp-send-button').disabled = (cart.length === 0);
         }
 
+        // دالة معالجة بيانات الشيت (المُرسلة منك)
         function fetchAndProcessProducts() {
             $.get(SHEET_URL, function (response) {
                 try {
@@ -477,9 +475,9 @@
                         
                         const row = rows[i].c;
 
-                        const productName = row[0]?.v || '';     
-                        const productPriceC2 = parseFloat(row[2]?.v) || 0; 
-                        const productImageLink = row[3]?.v || ''; 
+                        const productName = row[0]?.v || '';     // C0
+                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2
+                        const productImageLink = row[3]?.v || ''; // C3
                         const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
                         
                         const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
@@ -513,6 +511,7 @@
 
                     allPerfumes = processedProducts;
                     renderPerfumes();
+                    document.getElementById('whatsapp-send-button').disabled = false;
 
                 } catch (e) {
                     console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
@@ -526,7 +525,6 @@
 
         // دالة إرسال الطلب عبر واتساب
         function sendOrderViaWhatsApp() {
-            // ... (منطق إرسال الواتساب) ...
             if (cart.length === 0) {
                 alert(DICT[currentLang].cart_empty);
                 return;
@@ -550,7 +548,7 @@
                     priceText = item.basePrice.toFixed(2) + CURRENCY_SYMBOL;
                 }
 
-                message += `\n- ${item.name} (${item.type.includes('niche') ? t.type_niche : t.type_selective}): ${priceText}`;
+                message += `\n- ${item.name}: ${priceText}`;
             });
             
             finalTotal = subtotal + SHIPPING_FEE;
