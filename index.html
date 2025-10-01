@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عروض العطور النيش والسلكتف الحصرية</title>
     
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <style>
         body { font-family: Tahoma, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
         header { background-color: #5d4037; color: white; padding: 20px; text-align: center; }
@@ -54,8 +56,8 @@
 
     <script>
         // ******************************************************
-        // 1. رابط CSV من ملف Google Sheet الخاص بك
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWJMujOko7GbRtvG94b1bNA3TEeSNh7aL4AJFOazRcdlbGEThnkevfzuJXdSpo0ym8xK3KveAK_m0_/pub?output=csv"; 
+        // 1. رابط JSON/GViz من ملف Google Sheet الخاص بك (الصيغة الصحيحة)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
         
         // 2. رقم الواتساب الخاص بك
         const PHONE_NUMBER = "972522511749"; 
@@ -63,110 +65,30 @@
 
         let allPerfumes = [];
         let cart = [];
-        
-        // متغيرات لتخزين أسماء الأعمدة الفعلية بعد القراءة
-        let headerMap = {
-            'Name': null,
-            'Description': null,
-            'Price': null,
-            'ImageURL': null
-        };
 
-        // دالة لتحويل بيانات CSV إلى مصفوفة JavaScript
-        function csvToArray(csv) {
-            const lines = csv.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim()); 
-            
-            // تحديد أسماء الأعمدة الفعلية (مرونة في حالة وجود مسافات أو رموز)
-            headers.forEach((h, index) => {
-                const lowerH = h.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-                if (lowerH.includes('perfume name')) headerMap.Name = h;
-                else if (lowerH.includes('description')) headerMap.Description = h;
-                else if (lowerH.includes('price')) headerMap.Price = h;
-                else if (lowerH.includes('image link') || lowerH.includes('imgelink')) headerMap.ImageURL = h;
-            });
-            
-            const result = [];
-            // الحلقة تبدأ من i = 1 لتجاهل السطر الأول (رؤوس الأعمدة)
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const currentline = lines[i].match(/(".*?"|[^",\s]+)(?=\s*\,|\s*$)/g);
-                if (!currentline) continue;
-                
-                const obj = {};
-                let name = ''; 
-                let description = '';
-                let price = 0;
-                let imageLink = '';
-                
-                for (let j = 0; j < headers.length; j++) {
-                    let value = (currentline[j] || "").replace(/"/g, "").trim();
-                    
-                    // قراءة القيم بناءً على اسم العمود المُكتشف
-                    if (headers[j] === headerMap.Name) { 
-                        name = value;
-                    } else if (headers[j] === headerMap.Description) { 
-                        description = value;
-                    } else if (headers[j] === headerMap.Price) { 
-                        price = parseFloat(value);
-                    } else if (headers[j] === headerMap.ImageURL) { 
-                        imageLink = value;
-                    } 
-                }
-                
-                // تعيين القيم النهائية
-                obj.ImageURL = imageLink;
-                obj.Price = price;
-                obj.Name = name;
-                obj.ID = name.substring(0, 50); // استخدام جزء من الاسم كمعرف ID
+        // دالة لإنشاء عنصر عطر HTML
+        function createPerfumeItem(perfume) {
+            const div = document.createElement('div');
+            div.className = 'perfume-item';
+            div.dataset.id = perfume.id;
+            div.dataset.type = perfume.type;
+            div.dataset.price = perfume.price;
+            div.dataset.name = perfume.name;
 
-                // *** منطق التصنيف الرئيسي بناءً على عمود e Description ***
-                const descLower = description.toLowerCase();
+            let imgUrl = perfume.image && perfume.image.trim() ? perfume.image : 'https://via.placeholder.com/180?text=No+Image';
 
-                if (descLower.includes('niche')) {
-                    obj.Type = 'niche';
-                } else if (descLower.includes('man')) {
-                    obj.Type = 'selective'; 
-                    obj.Name = 'رجالي: ' + name;
-                } else if (descLower.includes('woman') || descLower.includes('women')) {
-                    obj.Type = 'selective'; 
-                    obj.Name = 'نسائي: ' + name;
-                } else {
-                    obj.Type = 'selective'; // افتراضياً سلكتف
-                }
-
-                // التأكد من أن العناصر الأساسية موجودة وصالحة قبل الإضافة
-                if (obj.ID && obj.Name && !isNaN(obj.Price) && obj.Price > 0) {
-                    result.push(obj);
-                }
+            // منطق تصحيح الرابط لضمان HTTPS
+            if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
+                imgUrl = imgUrl.replace('http://', 'https://');
             }
-            return result;
-        }
 
-        // دالة لجلب البيانات من Google Sheet
-        async function fetchPerfumes() {
-            try {
-                const response = await fetch(SHEET_URL);
-                if (!response.ok) throw new Error("فشل في جلب البيانات من ملف الشيت.");
-                const csvText = await response.text();
-                allPerfumes = csvToArray(csvText);
-                
-                // تحضير البيانات لضمان أن التصنيف niche أو selective
-                allPerfumes = allPerfumes.map(p => ({
-                    ID: p.ID,
-                    Name: p.Name,
-                    Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', 
-                    Price: p.Price,
-                    ImageURL: p.ImageURL
-                })).filter(p => !isNaN(p.Price) && p.Price > 0); 
-
-                renderPerfumes();
-                document.getElementById('perfume-display').querySelector('h2').textContent = 'العطور المتوفرة';
-                document.getElementById('whatsapp-send-button').disabled = false;
-            } catch (error) {
-                console.error("خطأ في تحميل العطور:", error);
-                document.getElementById('perfume-display').innerHTML = '<h2>عذراً، حدث خطأ في تحميل بيانات العطور. يرجى التحقق من رابط الشيت أو إعدادات النشر.</h2>';
-            }
+            div.innerHTML = `
+                <img src="${imgUrl}" alt="${perfume.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
+                <h3>${perfume.name}</h3>
+                <p>السعر: ${perfume.price.toFixed(2)}$</p>
+                <button class="add-to-cart">أضف للسلة</button>
+            `;
+            return div;
         }
 
         // دالة عرض العطور في واجهة المستخدم
@@ -174,8 +96,8 @@
             const displaySection = document.getElementById('perfume-display');
             displaySection.innerHTML = ''; 
 
-            const nichePerfumes = allPerfumes.filter(p => p.Type === 'niche');
-            const selectivePerfumes = allPerfumes.filter(p => p.Type === 'selective');
+            const nichePerfumes = allPerfumes.filter(p => p.type === 'niche');
+            const selectivePerfumes = allPerfumes.filter(p => p.type === 'selective');
 
             // 1. عرض عطور النيش
             displaySection.innerHTML += '<h2>عطور النيش الفاخرة</h2><div class="perfume-grid" id="niche-grid"></div>';
@@ -194,31 +116,63 @@
             });
         }
 
-        // دالة لإنشاء عنصر عطر HTML (تم التعديل لضمان HTTPS)
-        function createPerfumeItem(perfume) {
-            const div = document.createElement('div');
-            div.className = 'perfume-item';
-            div.dataset.id = perfume.ID;
-            div.dataset.type = perfume.Type;
-            div.dataset.price = perfume.Price;
-            div.dataset.name = perfume.Name;
+        // دالة معالجة بيانات الشيت (المُرسلة منك)
+        function fetchAndProcessProducts() {
+            $.get(SHEET_URL, function (response) {
+                try {
+                    // استخراج كائن JSON من استجابة Google Visualization
+                    const jsonText = response.match(/google\.visualization\.Query\.setResponse\((.*)\)/)[1];
+                    const jsonData = JSON.parse(jsonText);
+                    const rows = jsonData.table.rows;
 
-            let imgUrl = perfume.ImageURL && perfume.ImageURL.trim() ? perfume.ImageURL : 'https://via.placeholder.com/180?text=No+Image';
+                    const processedProducts = [];
 
-            // *** منطق تصحيح الرابط لضمان HTTPS ***
-            if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
-                imgUrl = imgUrl.replace('http://', 'https://');
-            }
+                    // تجاوز السطر الأول (رؤوس الأعمدة)
+                    for (let i = 0; i < rows.length; i++) { // هنا i=0 لأن الاستجابة لا تتضمن رؤوس
+                        const row = rows[i].c;
 
-            div.innerHTML = `
-                <img src="${imgUrl}" alt="${perfume.Name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
-                <h3>${perfume.Name}</h3>
-                <p>السعر: ${perfume.Price.toFixed(2)}$</p>
-                <button class="add-to-cart">أضف للسلة</button>
-            `;
-            return div;
+                        // القراءة بناءً على مواقع الأعمدة في الشيت:
+                        const productName = row[0]?.v || '';     // C0
+                        const productCategoryRaw = row[1]?.v || ''; // C1 (يجب أن يحتوي على NICHE, MEN, WOMAN)
+                        const productPrice = parseFloat(row[2]?.v) || 0; // C2
+                        const productImageLink = row[3]?.v || ''; // C3
+
+                        // تجاهل السطور التي لا تحتوي على اسم أو سعر صالح
+                        if (!productName || productPrice === 0) continue; 
+                        
+                        const categoryLower = productCategoryRaw.toLowerCase();
+                        let type = 'selective';
+                        let namePrefix = '';
+
+                        if (categoryLower.includes('niche')) {
+                            type = 'niche';
+                        } else if (categoryLower.includes('woman')) {
+                            namePrefix = 'نسائي: ';
+                        } else if (categoryLower.includes('men')) {
+                            namePrefix = 'رجالي: ';
+                        }
+
+                        processedProducts.push({
+                            id: productName.substring(0, 50), // استخدام جزء من الاسم كمعرف ID
+                            name: namePrefix + productName,
+                            price: productPrice,
+                            image: productImageLink,
+                            type: type
+                        });
+                    }
+
+                    allPerfumes = processedProducts;
+                    renderPerfumes();
+                    document.getElementById('perfume-display').querySelector('h2').textContent = 'العطور المتوفرة';
+                    document.getElementById('whatsapp-send-button').disabled = false;
+
+                } catch (e) {
+                    console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
+                    document.getElementById('perfume-display').innerHTML = '<h2>عذراً، لم نتمكن من تحميل بيانات العطور. تحقق من رابط الشيت و صلاحية الأعمدة (C0, C1, C2, C3).</h2>';
+                }
+            });
         }
-
+        
         // دالة إضافة عطر للسلة (محدثة)
         function addToCart(event) {
             const itemElement = event.target.closest('.perfume-item');
@@ -350,9 +304,9 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // تشغيل جلب البيانات عند تحميل الصفحة وربط زر الواتساب
+        // تشغيل جلب البيانات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
-            fetchPerfumes();
+            fetchAndProcessProducts();
             document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
         });
     </script>
