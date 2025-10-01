@@ -63,11 +63,29 @@
 
         let allPerfumes = [];
         let cart = [];
+        
+        // متغيرات لتخزين أسماء الأعمدة الفعلية بعد القراءة
+        let headerMap = {
+            'Name': null,
+            'Description': null,
+            'Price': null,
+            'ImageURL': null
+        };
 
         // دالة لتحويل بيانات CSV إلى مصفوفة JavaScript
         function csvToArray(csv) {
             const lines = csv.split('\n');
             const headers = lines[0].split(',').map(h => h.trim()); 
+            
+            // تحديد أسماء الأعمدة الفعلية (مرونة في حالة وجود مسافات أو رموز)
+            headers.forEach((h, index) => {
+                const lowerH = h.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+                if (lowerH.includes('perfume name')) headerMap.Name = h;
+                else if (lowerH.includes('description')) headerMap.Description = h;
+                else if (lowerH.includes('price')) headerMap.Price = h;
+                else if (lowerH.includes('image link') || lowerH.includes('imgelink')) headerMap.ImageURL = h;
+            });
+            
             const result = [];
             // الحلقة تبدأ من i = 1 لتجاهل السطر الأول (رؤوس الأعمدة)
             for (let i = 1; i < lines.length; i++) {
@@ -84,14 +102,14 @@
                 for (let j = 0; j < headers.length; j++) {
                     let value = (currentline[j] || "").replace(/"/g, "").trim();
                     
-                    // قراءة الأعمدة بناءً على التسميات الجديدة
-                    if (headers[j] === 'a perfume name') { 
+                    // قراءة القيم بناءً على اسم العمود المُكتشف
+                    if (headers[j] === headerMap.Name) { 
                         name = value;
-                    } else if (headers[j] === 'e Description') { // تصنيف العطر
+                    } else if (headers[j] === headerMap.Description) { 
                         description = value;
-                    } else if (headers[j] === 'f price') { // السعر
+                    } else if (headers[j] === headerMap.Price) { 
                         price = parseFloat(value);
-                    } else if (headers[j] === 'd imege link') { // رابط الصورة
+                    } else if (headers[j] === headerMap.ImageURL) { 
                         imageLink = value;
                     } 
                 }
