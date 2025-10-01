@@ -69,6 +69,7 @@
             const lines = csv.split('\n');
             const headers = lines[0].split(',').map(h => h.trim()); 
             const result = [];
+            // الحلقة تبدأ من i = 1 لتجاهل السطر الأول (رؤوس الأعمدة)
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
                 const currentline = lines[i].match(/(".*?"|[^",\s]+)(?=\s*\,|\s*$)/g);
@@ -83,11 +84,10 @@
                 for (let j = 0; j < headers.length; j++) {
                     let value = (currentline[j] || "").replace(/"/g, "").trim();
                     
-                    // قراءة الأعمدة بناءً على رؤوس الأعمدة الجديدة
-                    if (headers[j] === 'a perfume name') { // اسم العطر
+                    // قراءة الأعمدة بناءً على التسميات الجديدة
+                    if (headers[j] === 'a perfume name') { 
                         name = value;
-                        obj.ID = value.substring(0, 50); // استخدام جزء من الاسم كمعرف ID
-                    } else if (headers[j] === 'e Description') { // التصنيف
+                    } else if (headers[j] === 'e Description') { // تصنيف العطر
                         description = value;
                     } else if (headers[j] === 'f price') { // السعر
                         price = parseFloat(value);
@@ -100,16 +100,21 @@
                 obj.ImageURL = imageLink;
                 obj.Price = price;
                 obj.Name = name;
-                
+                obj.ID = name.substring(0, 50); // استخدام جزء من الاسم كمعرف ID
+
                 // *** منطق التصنيف الرئيسي بناءً على عمود e Description ***
-                if (description.toLowerCase().includes('niche')) {
+                const descLower = description.toLowerCase();
+
+                if (descLower.includes('niche')) {
                     obj.Type = 'niche';
-                } else if (description.toLowerCase().includes('men') || description.toLowerCase().includes('woman')) {
+                } else if (descLower.includes('man')) {
                     obj.Type = 'selective'; 
-                } else if (name.toLowerCase().includes('niche')) { 
-                    obj.Type = 'niche'; 
+                    obj.Name = 'رجالي: ' + name;
+                } else if (descLower.includes('woman') || descLower.includes('women')) {
+                    obj.Type = 'selective'; 
+                    obj.Name = 'نسائي: ' + name;
                 } else {
-                    obj.Type = 'selective'; // افتراضياً سلكتف لأي شيء آخر
+                    obj.Type = 'selective'; // افتراضياً سلكتف
                 }
 
                 // التأكد من أن العناصر الأساسية موجودة وصالحة قبل الإضافة
