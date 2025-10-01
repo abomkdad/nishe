@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عروض العطور النيش والسلكتف الحصرية</title>
+    <title id="page-title">عروض العطور النيش والسلكتف الحصرية</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -15,7 +15,7 @@
             --background-color: #f4f4f4;
             --cart-color: #fff8e1;
             --whatsapp-color: #25D366;
-            --whatsapp-floating-color: #1FAF59;
+            --delete-color: #d32f2f;
         }
 
         body { 
@@ -24,9 +24,10 @@
             padding: 0; 
             background-color: var(--background-color); 
             color: #333; 
+            /* هام: إعطاء مساحة سفلية كافية للعربة الثابتة */
+            padding-bottom: 120px; 
         }
         
-        /* تصميم الرأس (Header) */
         header { 
             background-color: var(--primary-color); 
             color: white; 
@@ -34,102 +35,129 @@
             text-align: center;
         }
         
-        /* إعداد الحاوية الرئيسية */
         main { 
-            display: flex; 
             max-width: 1200px; 
             margin: 0 auto; 
             padding: 10px; 
-            flex-wrap: wrap; 
         }
         
-        /* إعداد قسم العرض الرئيسي (للعطور) */
         section { 
-            flex: 1; /* جعل القسم يملأ المساحة المتاحة في الديسكتوب */
-            padding: 10px; 
             background: white; 
             border-radius: 8px; 
             margin-bottom: 20px; 
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        /* تنسيق العنوان التوضيحي */
-        .offer-message {
-            background-color: #e8f5e9;
-            color: #1b5e20;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            text-align: center;
-            border: 1px solid #c8e6c9;
-        }
-        
-        /* تصميم الكاروسيل (عرض أفقي وقابل للتمرير) */
+        /* تصميم الكاروسيل */
         .perfume-carousel { 
             display: flex;
             overflow-x: auto; 
-            scroll-snap-type: x mandatory; 
             padding: 10px 0;
             gap: 12px;
-            margin-top: 15px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none; 
             -ms-overflow-style: none;
         }
-        .perfume-carousel::-webkit-scrollbar { 
-            display: none;
-        }
+        .perfume-carousel::-webkit-scrollbar { display: none; }
         
         .perfume-item { 
-            flex: 0 0 auto; 
-            width: 150px; 
+            flex: 0 0 150px; /* ثابتة العرض */
             border: 1px solid #ddd; padding: 8px; text-align: center; background: #fff; border-radius: 6px; 
-            scroll-snap-align: start; 
             transition: transform 0.2s; 
         }
         .perfume-item img { width: 100%; height: auto; max-height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
         
-        /* زر الإضافة للسلة */
         .add-to-cart { 
             background-color: var(--secondary-color); 
             color: white; 
             border: none; padding: 7px 10px; cursor: pointer; border-radius: 4px; 
-            margin-top: 5px; font-weight: bold; width: 100%; 
+            font-weight: bold; width: 100%; 
         }
 
-        /* تنسيق ملخص السلة - ثابتة على الجوال */
-        #cart-summary { 
-            position: sticky; /* الموقع الافتراضي للديسكتوب */
-            top: 10px; 
-            flex: 1; 
-            padding: 15px; 
-            background: var(--cart-color); 
-            border: 1px solid #ffecb3; 
-            border-radius: 8px; 
-            height: fit-content; 
-            min-width: 250px; 
-            margin-right: 20px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* ************************************** */
+        /* تصميم العربة الثابتة (Fixed Cart) */
+        /* ************************************** */
+        #cart-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: white;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            border-top: 1px solid #ddd;
+            padding-bottom: env(safe-area-inset-bottom); /* لمعالجة نوتش الجوال */
         }
-        
-        #cart-list { list-style: none; padding: 0; }
-        #total-price { font-weight: bold; color: #b71c1c; font-size: 1.5em; }
-        .gift { color: green; font-weight: bold; }
-        .discount { color: orange; font-weight: bold; }
-        
+
+        #cart-summary { 
+            background: var(--cart-color); 
+            padding: 10px 15px; 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #cart-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        #cart-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+            max-height: 50px; /* لتقليل ارتفاع العربة الثابتة */
+            overflow-y: auto;
+            font-size: 0.85em;
+        }
+
+        #cart-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+        }
+
+        .delete-item {
+            cursor: pointer;
+            color: var(--delete-color);
+            margin-right: 5px;
+            font-size: 1em;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .delete-item:hover { opacity: 1; }
+
+        #total-price-display {
+            font-weight: bold;
+            color: #b71c1c;
+            font-size: 1.3em;
+            white-space: nowrap; /* منع انقسام السعر */
+        }
+
         #whatsapp-send-button { 
             background-color: var(--whatsapp-color); 
-            color: white; border: none; padding: 12px; width: 100%; 
-            margin-top: 15px; border-radius: 6px; cursor: pointer; 
-            font-size: 1.1em; font-weight: bold; 
+            color: white; border: none; padding: 10px 15px; 
+            border-radius: 5px; cursor: pointer; 
+            font-size: 1em; font-weight: bold; 
+            margin-right: 10px;
+            white-space: nowrap;
         }
-
+        
+        #shipping-info {
+            font-size: 0.75em;
+            color: #555;
+        }
+        
         /* زر واتساب العائم */
         #floating-whatsapp {
             position: fixed;
-            bottom: 120px; /* فوق العربة المثبتة */
+            bottom: 110px; /* فوق العربة المثبتة */
             left: 15px;
-            background-color: var(--whatsapp-floating-color);
+            background-color: var(--whatsapp-color);
             color: white;
             padding: 8px 12px;
             border-radius: 50px;
@@ -142,94 +170,167 @@
         }
         #floating-whatsapp i {
             font-size: 1.2em;
-            margin-left: 8px;
+            margin-right: 8px;
+        }
+        
+        .offer-message {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #c8e6c9;
         }
 
-        /* ************************************** */
-        /* تعديلات مخصصة للجوال (Mobile-Specific) */
-        /* ************************************** */
-        @media (max-width: 768px) {
-            main { 
-                flex-direction: column; 
-                padding-bottom: 180px; /* مساحة أكبر للسلة الثابتة وزر الواتساب العائم */
-            }
-            
-            section { 
-                padding: 10px; 
-                margin-bottom: 10px;
-            }
-            
-            /* تثبيت السلة في أسفل الشاشة */
-            #cart-summary {
-                position: fixed; 
-                bottom: 0; 
-                left: 0;
-                right: 0;
-                width: 100%;
-                z-index: 1000; 
-                border-radius: 0;
-                margin-right: 0;
-                padding: 10px 15px;
-                box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-            }
-            
-            /* إخفاء قائمة العطور في السلة على الجوال الصغير لتوفير مساحة */
-            #cart-list {
-                max-height: 50px;
-                overflow: hidden;
-                margin-bottom: 5px;
-            }
-            
-            #cart-summary h2 {
-                display: none; 
-            }
-        }
+        /* تعديلات اللغة (لضبط اتجاه النص عند الحاجة) */
+        [lang="he"] #floating-whatsapp { left: auto; right: 15px; }
+        [lang="he"] #floating-whatsapp i { margin-left: 0; margin-right: 8px; }
     </style>
 </head>
-<body>
-    <header>
-        <h1>✨ عروض العطور الفاخرة لا تُقاوم! ✨</h1>
-        <p>⭐ اختر عطور **النيش** واستفد من الخصومات أو الهدايا على عطور **السلكتف**.</p>
+<body lang="ar"> <header>
+        <h1 id="header-title">✨ عروض العطور الفاخرة لا تُقاوم! ✨</h1>
+        <p id="header-subtitle">⭐ اختر عطور النيش واستفد من الخصومات أو الهدايا.</p>
     </header>
 
     <main>
         <section id="perfume-display">
-            <h2>جارٍ تحميل العطور...</h2>
+            <h2 id="loading-message">جارٍ تحميل العطور...</h2>
         </section>
-
-        <a id="floating-whatsapp" href="https://wa.me/972522511749?text=%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AD%D8%B5%D9%88%D9%84%20%D8%B9%D9%84%D9%89%20%D8%B9%D8%B1%D8%B6%20%D8%A7%D9%84%D9%86%D9%8A%D8%B4%20%D8%A7%D9%84%D9%85%D9%85%D9%8A%D8%B2" target="_blank">
-            <i class="fab fa-whatsapp"></i> أرغب بالحصول على عرض النيش
-        </a>
-
-        <aside id="cart-summary">
-            <h2>🛒 ملخص السلة</h2>
-            <ul id="cart-list"></ul>
-            <h3>الإجمالي: <span id="total-price">0.00 ₪</span></h3>
-            
-            <button id="whatsapp-send-button" disabled>
-                إتمام الطلب وإرساله عبر واتساب
-            </button>
-            
-            <p style="font-size: 0.85em; margin-top: 15px; color: #666;">* يتم تطبيق العرض تلقائيًا على أرخص عطر سلكتف في السلة.</p>
-        </aside>
     </main>
+
+    <a id="floating-whatsapp" href="#" target="_blank">
+        <i class="fab fa-whatsapp"></i> <span id="whatsapp-float-text">أرغب بالحصول على عرض النيش</span>
+    </a>
+
+    <div id="cart-container">
+        <aside id="cart-summary">
+            <div id="cart-details">
+                <ul id="cart-list"></ul>
+                <p id="shipping-info"></p>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px;">
+                    <span id="total-text">الإجمالي:</span>
+                    <span id="total-price-display">0.00 ₪</span>
+                </div>
+            </div>
+            <button id="whatsapp-send-button" disabled>
+                إتمام الطلب
+            </button>
+        </aside>
+    </div>
 
     <script>
         // ******************************************************
+        // المتغيرات الثابتة والمحلية
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
         const PHONE_NUMBER = "972522511749"; 
         const CURRENCY_SYMBOL = " ₪";
+        const SHIPPING_FEE = 50; // رسوم التوصيل الثابتة (50 شيكل)
+
+        // نطاقات الأسطر للتصنيف (في الشيت الذي يبدأ سطره الأول بـ 1)
         const ROWS_RANGES = {
             'selective_men': { start: 2, end: 109 },
             'selective_woman': { start: 110, end: 231 },
             'niche': { start: 232, end: 289 }
         };
-        // ******************************************************
 
+        // نصوص اللغة العربية والعبرية
+        const DICT = {
+            ar: {
+                title: '✨ عروض العطور الفاخرة لا تُقاوم! ✨',
+                subtitle: '⭐ اختر عطور النيش واستفد من الخصومات أو الهدايا.',
+                loading: 'جارٍ تحميل العطور...',
+                niche_header: 'عطور النيش الفاخرة',
+                niche_offer_msg: 'قم باختيار عطر أو عطرين نيش للحصول على العرض.',
+                men_header: 'عطور سلكتف رجالي',
+                woman_header: 'عطور سلكتف نسائي',
+                add_to_cart: 'أضف للسلة',
+                total_text: 'الإجمالي:',
+                shipping_text: 'رسوم التوصيل: ' + SHIPPING_FEE.toFixed(2) + CURRENCY_SYMBOL,
+                shipping_free: 'رسوم التوصيل: مجاناً!',
+                complete_order: 'إتمام الطلب',
+                cart_empty: 'سلة المشتريات فارغة.',
+                item_added: 'هذا العطر مضاف بالفعل إلى السلة.',
+                whatsapp_float: 'أرغب بالحصول على عرض النيش',
+                msg_gift: 'هدية مجانية',
+                msg_discount: 'خصم 50%',
+                msg_order_complete: 'طلب عطور جديد:',
+                msg_no_offer: 'لم يتم تطبيق عرض.',
+                type_niche: 'نيش',
+                type_selective: 'سلكتف',
+                type_men_prefix: 'رجالي: ',
+                type_woman_prefix: 'نسائي: '
+            },
+            he: {
+                title: '✨ מבצעי בישום יוקרתיים! ✨',
+                subtitle: '⭐ בחר בשמי ניש וקבל הנחות או מתנות.',
+                loading: 'טוען בשמים...',
+                niche_header: 'בשמי ניש יוקרתיים',
+                niche_offer_msg: 'בחר בושם ניש אחד או שניים כדי לקבל את המבצע.',
+                men_header: 'בשמי סלקטיב לגבר',
+                woman_header: 'בשמי סלקטיב לאישה',
+                add_to_cart: 'הוסף לסל',
+                total_text: 'סה"כ:',
+                shipping_text: 'דמי משלוח: ' + SHIPPING_FEE.toFixed(2) + CURRENCY_SYMBOL,
+                shipping_free: 'דמי משלוח: חינם!',
+                complete_order: 'סיים הזמנה',
+                cart_empty: 'הסל ריק.',
+                item_added: 'פריט זה כבר קיים בסל.',
+                whatsapp_float: 'אני רוצה את מבצע הניש',
+                msg_gift: 'מתנה חינם',
+                msg_discount: '50% הנחה',
+                msg_order_complete: 'הזמנת בשמים חדשה:',
+                msg_no_offer: 'לא הוחל מבצע.',
+                type_niche: 'ניש',
+                type_selective: 'סלקטיב',
+                type_men_prefix: 'גבר: ',
+                type_woman_prefix: 'אישה: '
+            }
+        };
+
+        let currentLang = 'ar';
         let allPerfumes = [];
         let cart = [];
 
+        // ********** دالة تحديد اللغة **********
+        function setLanguage() {
+            const browserLang = navigator.language.substring(0, 2).toLowerCase();
+            if (browserLang === 'he') {
+                currentLang = 'he';
+                document.documentElement.setAttribute('lang', 'he');
+                document.documentElement.setAttribute('dir', 'rtl');
+                
+                // تحديث اتجاه الزر العائم لليمين
+                document.getElementById('floating-whatsapp').style.right = '15px';
+                document.getElementById('floating-whatsapp').style.left = 'auto';
+            } else {
+                currentLang = 'ar';
+            }
+            // تحديث جميع النصوص في الصفحة
+            updateTexts();
+        }
+
+        // دالة تحديث النصوص بناءً على اللغة
+        function updateTexts() {
+            const t = DICT[currentLang];
+            document.getElementById('page-title').textContent = t.title;
+            document.getElementById('header-title').textContent = t.title;
+            document.getElementById('header-subtitle').textContent = t.subtitle;
+            document.getElementById('loading-message').textContent = t.loading;
+            document.getElementById('total-text').textContent = t.total_text;
+            document.getElementById('whatsapp-send-button').textContent = t.complete_order;
+            document.getElementById('whatsapp-float-text').textContent = t.whatsapp_float;
+            
+            // تحديث رسالة الواتساب العائم
+            document.getElementById('floating-whatsapp').href = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(t.whatsapp_float)}`;
+        }
+
+
+        // ********** منطق إدارة السلة **********
+
         function createPerfumeItem(perfume) {
+            // ... (نفس المنطق السابق) ...
             const div = document.createElement('div');
             div.className = 'perfume-item';
             div.dataset.id = perfume.id;
@@ -238,15 +339,17 @@
             div.dataset.name = perfume.name;
 
             let imgUrl = perfume.image && perfume.image.trim() ? perfume.image : 'https://via.placeholder.com/180?text=No+Image';
+
             if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
                 imgUrl = imgUrl.replace('http://', 'https://');
             }
 
+            const t = DICT[currentLang];
             div.innerHTML = `
                 <img src="${imgUrl}" alt="${perfume.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
                 <h3>${perfume.name}</h3>
-                <p>السعر: ${perfume.price.toFixed(2)}${CURRENCY_SYMBOL}</p>
-                <button class="add-to-cart">أضف للسلة</button>
+                <p>${perfume.price.toFixed(2)}${CURRENCY_SYMBOL}</p>
+                <button class="add-to-cart">${t.add_to_cart}</button>
             `;
             return div;
         }
@@ -259,18 +362,24 @@
             const selectiveMenPerfumes = allPerfumes.filter(p => p.type === 'selective_men');
             const selectiveWomanPerfumes = allPerfumes.filter(p => p.type === 'selective_woman');
             
+            const t = DICT[currentLang];
+            
             // 1. عرض عطور النيش
-            displaySection.innerHTML += '<h2>قم باختيار عطر أو عطرين نيش للحصول على العرض:</h2><div class="perfume-carousel" id="niche-carousel"></div>';
+            displaySection.innerHTML += `
+                <div class="offer-message">${t.niche_offer_msg}</div>
+                <h2>${t.niche_header}</h2>
+                <div class="perfume-carousel" id="niche-carousel"></div>
+            `;
             const nicheCarousel = document.getElementById('niche-carousel');
             nichePerfumes.forEach(p => nicheCarousel.appendChild(createPerfumeItem(p)));
 
             // 2. عرض عطور سلكتف رجالي
-            displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف رجالي</h2><div class="perfume-carousel" id="selective-men-carousel"></div>';
+            displaySection.innerHTML += `<hr style="margin: 30px 0;"><h2>${t.men_header}</h2><div class="perfume-carousel" id="selective-men-carousel"></div>`;
             const selectiveMenCarousel = document.getElementById('selective-men-carousel');
             selectiveMenPerfumes.forEach(p => selectiveMenCarousel.appendChild(createPerfumeItem(p)));
             
             // 3. عرض عطور سلكتف نسائي
-            displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف نسائي</h2><div class="perfume-carousel" id="selective-woman-carousel"></div>';
+            displaySection.innerHTML += `<hr style="margin: 30px 0;"><h2>${t.woman_header}</h2><div class="perfume-carousel" id="selective-woman-carousel"></div>`;
             const selectiveWomanCarousel = document.getElementById('selective-woman-carousel');
             selectiveWomanPerfumes.forEach(p => selectiveWomanCarousel.appendChild(createPerfumeItem(p)));
 
@@ -278,7 +387,98 @@
                 button.addEventListener('click', addToCart);
             });
         }
+        
+        // دالة حذف عنصر من السلة
+        function removeItemFromCart(index) {
+            cart.splice(index, 1);
+            updateCartAndOffers();
+        }
 
+        function updateCartAndOffers() {
+            // 1. إعادة تعيين أسعار السلكتف
+            cart.forEach(item => {
+                if (item.type.startsWith('selective')) {
+                    item.finalPrice = item.basePrice; 
+                    item.isDiscounted = false;
+                    item.isFreeGift = false;
+                }
+            });
+
+            // 2. حساب عدد عطور النيش
+            const nicheCount = cart.filter(item => item.type === 'niche').length;
+
+            // 3. تحديد أرخص عطر سلكتف في السلة لتطبيق العرض عليه
+            let selectiveItems = cart
+                .filter(item => item.type.startsWith('selective'))
+                .sort((a, b) => a.basePrice - b.basePrice); 
+            
+            if (selectiveItems.length > 0) {
+                const cheapestSelective = selectiveItems[0]; 
+
+                if (nicheCount === 1) {
+                    cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
+                    cheapestSelective.isDiscounted = true;
+
+                } else if (nicheCount >= 2) {
+                    cheapestSelective.finalPrice = 0;
+                    cheapestSelective.isDiscounted = true;
+                    cheapestSelective.isFreeGift = true;
+                }
+            }
+            renderCartSummary();
+        }
+
+        // دالة لعرض ملخص السلة
+        function renderCartSummary() {
+            const cartList = document.getElementById('cart-list');
+            const totalPriceDisplay = document.getElementById('total-price-display');
+            const shippingInfo = document.getElementById('shipping-info');
+            const t = DICT[currentLang];
+            let subtotal = 0;
+            
+            cartList.innerHTML = ''; 
+
+            cart.forEach((item, index) => {
+                subtotal += item.finalPrice;
+                const li = document.createElement('li');
+                
+                let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
+                let typeName = item.type.includes('niche') ? t.type_niche : t.type_selective;
+
+                if (item.isDiscounted) {
+                    if (item.isFreeGift) {
+                        priceText = `<span class="gift">${t.msg_gift}</span>`;
+                    } else {
+                        priceText = `<span class="discount">${priceText}</span> (${t.msg_discount})`;
+                    }
+                }
+
+                li.innerHTML = `
+                    <div>
+                        <i class="fas fa-trash-alt delete-item" onclick="removeItemFromCart(${index})"></i>
+                        ${item.name}
+                    </div>
+                    <span>${priceText}</span>
+                `;
+                cartList.appendChild(li);
+            });
+
+            // إضافة رسوم التوصيل
+            let finalTotal = subtotal;
+            if (subtotal > 0) {
+                finalTotal += SHIPPING_FEE;
+                shippingInfo.innerHTML = t.shipping_text;
+            } else {
+                shippingInfo.innerHTML = '';
+            }
+
+            totalPriceDisplay.textContent = finalTotal.toFixed(2) + CURRENCY_SYMBOL;
+            
+            // تفعيل زر الإرسال فقط إذا كان هناك شيء في السلة
+            document.getElementById('whatsapp-send-button').disabled = (cart.length === 0);
+        }
+
+        // دالة جلب البيانات الأصلية (لم تتغير)
         function fetchAndProcessProducts() {
             $.get(SHEET_URL, function (response) {
                 try {
@@ -313,10 +513,10 @@
                             type = 'niche';
                         } else if (sheetRowNumber >= ROWS_RANGES.selective_men.start && sheetRowNumber <= ROWS_RANGES.selective_men.end) {
                             type = 'selective_men';
-                            namePrefix = 'رجالي: ';
+                            namePrefix = DICT[currentLang].type_men_prefix;
                         } else if (sheetRowNumber >= ROWS_RANGES.selective_woman.start && sheetRowNumber <= ROWS_RANGES.selective_woman.end) {
                             type = 'selective_woman';
-                            namePrefix = 'نسائي: ';
+                            namePrefix = DICT[currentLang].type_woman_prefix;
                         } else {
                             continue;
                         }
@@ -336,143 +536,67 @@
 
                 } catch (e) {
                     console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
-                    document.getElementById('perfume-display').innerHTML = '<h2>عذراً، لم نتمكن من تحميل بيانات العطور. تحقق من رابط الشيت وصلاحية الأعمدة.</h2>';
+                    document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].loading}</h2>`;
                 }
             });
         }
-        
-        function addToCart(event) {
-            const itemElement = event.target.closest('.perfume-item');
-            if (!itemElement) return;
 
-            const itemId = itemElement.dataset.id;
-            
-            if (cart.some(item => item.id === itemId)) {
-                 alert("هذا العطر مضاف بالفعل إلى السلة.");
-                 return;
-            }
-
-            const item = {
-                id: itemId,
-                name: itemElement.dataset.name,
-                type: itemElement.dataset.type,
-                basePrice: parseFloat(itemElement.dataset.price),
-                finalPrice: parseFloat(itemElement.dataset.price),
-                isDiscounted: false,
-                isFreeGift: false
-            };
-            
-            cart.push(item);
-            updateCartAndOffers();
-        }
-
-        function updateCartAndOffers() {
-            cart.forEach(item => {
-                if (item.type.startsWith('selective')) {
-                    item.finalPrice = item.basePrice; 
-                    item.isDiscounted = false;
-                    item.isFreeGift = false;
-                }
-            });
-
-            const nicheCount = cart.filter(item => item.type === 'niche').length;
-
-            let selectiveItems = cart
-                .filter(item => item.type.startsWith('selective'))
-                .sort((a, b) => a.basePrice - b.basePrice); 
-            
-            if (selectiveItems.length > 0) {
-                const cheapestSelective = selectiveItems[0]; 
-
-                if (nicheCount === 1) {
-                    cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
-                    cheapestSelective.isDiscounted = true;
-
-                } else if (nicheCount >= 2) {
-                    cheapestSelective.finalPrice = 0;
-                    cheapestSelective.isDiscounted = true;
-                    cheapestSelective.isFreeGift = true;
-                }
-            }
-            renderCartSummary();
-        }
-
-        function renderCartSummary() {
-            const cartList = document.getElementById('cart-list');
-            const totalPriceElement = document.getElementById('total-price');
-            let total = 0;
-            cartList.innerHTML = ''; 
-
-            cart.forEach(item => {
-                total += item.finalPrice;
-                const li = document.createElement('li');
-                
-                let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
-
-                if (item.isDiscounted) {
-                    if (item.isFreeGift) {
-                        priceText = `<span class="gift">هدية مجانية!</span> <del>${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}</del>`;
-                    } else {
-                        priceText = `<span class="discount">${priceText}</span> <del>${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}</del> (خصم 50%)`;
-                    }
-                } else {
-                    priceText = `${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}`;
-                }
-
-                li.innerHTML = `<strong>${item.name}</strong> (${item.type.includes('niche') ? 'نيش' : 'سلكتف'}): ${priceText}`;
-                cartList.appendChild(li);
-            });
-
-            totalPriceElement.textContent = total.toFixed(2) + CURRENCY_SYMBOL;
-        }
-
+        // دالة إرسال الطلب عبر واتساب
         function sendOrderViaWhatsApp() {
             if (cart.length === 0) {
-                alert("سلة المشتريات فارغة.");
+                alert(DICT[currentLang].cart_empty);
                 return;
             }
 
+            const t = DICT[currentLang];
             const nicheCount = cart.filter(item => item.type === 'niche').length;
-            let message = "🎉 *طلب عطور جديد:*\n\n*1. العطور المختارة:*\n";
-            let total = 0;
+            let message = `🎉 *${t.msg_order_complete}*\n\n*1. ${t.niche_header} و ${t.type_selective}:*\n`;
+            let subtotal = 0;
+            let finalTotal = 0;
 
             cart.forEach(item => {
-                total += item.finalPrice;
+                subtotal += item.finalPrice;
                 let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
 
                 if (item.isDiscounted) {
-                    priceText = (item.finalPrice === 0) 
-                                ? "🎁 *هدية مجانية*"
-                                : "💰 *" + item.finalPrice.toFixed(2) + CURRENCY_SYMBOL + "* (خصم 50%)";
+                    priceText = (item.isFreeGift) 
+                                ? `🎁 *${t.msg_gift}*`
+                                : `💰 *${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}* (${t.msg_discount})`;
                 } else {
                     priceText = item.basePrice.toFixed(2) + CURRENCY_SYMBOL;
                 }
 
-                message += `\n- ${item.name} (${item.type.includes('niche') ? 'نيش' : 'سلكتف'}): ${priceText}`;
+                message += `\n- ${item.name}: ${priceText}`;
             });
+            
+            finalTotal = subtotal + SHIPPING_FEE;
 
             let offerSummary = "\n\n*2. ملخص العرض:*";
             if (nicheCount === 1) {
-                offerSummary += "\n- تم تطبيق عرض *عطر سلكتف بنصف السعر*.";
+                offerSummary += `\n- ${t.niche_header} + ${t.type_selective} بنصف السعر.`;
             } else if (nicheCount >= 2) {
-                offerSummary += "\n- تم تطبيق عرض *عطر سلكتف هدية مجانية*.";
+                offerSummary += `\n- ${t.niche_header} + 1 ${t.type_selective} هدية مجانية.`;
             } else {
-                offerSummary += "\n- لم يتم تطبيق عرض.";
+                offerSummary += `\n- ${t.msg_no_offer}`;
             }
+            
             message += offerSummary;
             
             message += `\n\n====================\n`;
-            message += `💵 *الإجمالي النهائي:* ${total.toFixed(2)}${CURRENCY_SYMBOL}`;
+            message += `🚚 ${t.shipping_text}: ${SHIPPING_FEE.toFixed(2)}${CURRENCY_SYMBOL}`;
+            message += `\n💵 *${t.total_text}* ${finalTotal.toFixed(2)}${CURRENCY_SYMBOL}`;
             
             const pageUrl = window.location.href; 
-            message += `\n\nلإتمام الطلب ورؤية الصور، يرجى الرد على هذه الرسالة.\n(رابط الطلب: ${pageUrl})`;
+            message += `\n\n${t.complete_order} عبر الرابط: ${pageUrl}`;
 
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/${PHONE_NUMBER}?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
         }
 
+        // تشغيل جلب البيانات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(); // ضبط اللغة أولاً
             fetchAndProcessProducts();
             document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
         });
