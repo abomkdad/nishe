@@ -8,43 +8,159 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <style>
-        body { font-family: Tahoma, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
-        header { background-color: #5d4037; color: white; padding: 20px; text-align: center; }
-        h1 { margin: 0; }
-        main { display: flex; max-width: 1200px; margin: 20px auto; padding: 0 15px; flex-wrap: wrap; }
-        section { flex: 3; padding: 20px; background: white; border-radius: 8px; margin-bottom: 20px; }
-        #cart-summary { flex: 1; padding: 20px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; position: sticky; top: 20px; height: fit-content; min-width: 250px; margin-right: 20px; }
+        :root {
+            --primary-color: #5d4037;
+            --secondary-color: #8d6e63;
+            --background-color: #f4f4f4;
+            --cart-color: #fff8e1;
+            --whatsapp-color: #25D366;
+        }
+
+        body { 
+            font-family: Tahoma, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--background-color); 
+            color: #333; 
+        }
+        
+        /* تصميم الرأس (Header) */
+        header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 15px 10px; 
+            text-align: center;
+        }
+        
+        /* إعداد الحاوية الرئيسية */
+        main { 
+            display: flex; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 10px; 
+            flex-wrap: wrap; 
+        }
+        
+        /* إعداد قسم العرض الرئيسي (للعطور) */
+        section { 
+            flex: 3; 
+            padding: 10px; 
+            background: white; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
         
         /* تصميم الكاروسيل (عرض أفقي وقابل للتمرير) */
         .perfume-carousel { 
             display: flex;
-            overflow-x: auto; /* تمكين التمرير الأفقي */
-            scroll-snap-type: x mandatory; /* لجعل التمرير أكثر سلاسة */
+            overflow-x: auto; 
+            scroll-snap-type: x mandatory; 
             padding: 10px 0;
-            gap: 15px;
+            gap: 12px;
             margin-top: 15px;
-            -webkit-overflow-scrolling: touch; /* تحسين تجربة التمرير على iOS */
+            -webkit-overflow-scrolling: touch;
+            /* إخفاء شريط التمرير الأفقي على المتصفحات */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+        .perfume-carousel::-webkit-scrollbar { /* Chrome, Safari, Opera */
+            display: none;
         }
         
         .perfume-item { 
-            flex: 0 0 auto; /* منع العناصر من التمدد وتحديد عرضها */
-            width: 180px; /* عرض ثابت لكل عنصر */
-            border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; 
-            scroll-snap-align: start; /* محاذاة كل عنصر مع بداية منطقة التمرير */
+            flex: 0 0 auto; 
+            width: 150px; /* عرض مناسب للجوال */
+            border: 1px solid #ddd; padding: 8px; text-align: center; background: #fff; border-radius: 6px; 
+            scroll-snap-align: start; 
             transition: transform 0.2s; 
         }
+        .perfume-item img { width: 100%; height: auto; max-height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
         
-        .perfume-item:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .perfume-item img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
-        .add-to-cart { background-color: #8d6e63; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; margin-top: 10px; font-weight: bold; width: 100%; }
+        /* زر الإضافة للسلة */
+        .add-to-cart { 
+            background-color: var(--secondary-color); 
+            color: white; 
+            border: none; padding: 7px 10px; cursor: pointer; border-radius: 4px; 
+            margin-top: 5px; font-weight: bold; width: 100%; 
+        }
+
+        /* تنسيق ملخص السلة للجوال والديسكتوب */
+        #cart-summary { 
+            flex: 1; 
+            padding: 15px; 
+            background: var(--cart-color); 
+            border: 1px solid #ffecb3; 
+            border-radius: 8px; 
+            position: sticky; 
+            top: 10px; 
+            height: fit-content; 
+            min-width: 250px; 
+            margin-right: 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
         #cart-list { list-style: none; padding: 0; }
         #total-price { font-weight: bold; color: #b71c1c; font-size: 1.5em; }
         .gift { color: green; font-weight: bold; }
         .discount { color: orange; font-weight: bold; }
-        #whatsapp-send-button { background-color: #25D366; color: white; border: none; padding: 12px; width: 100%; margin-top: 15px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; }
-        @media (max-width: 900px) {
-            main { flex-direction: column; }
-            #cart-summary { margin-right: 0; order: -1; }
+        
+        #whatsapp-send-button { 
+            background-color: var(--whatsapp-color); 
+            color: white; border: none; padding: 12px; width: 100%; 
+            margin-top: 15px; border-radius: 6px; cursor: pointer; 
+            font-size: 1.1em; font-weight: bold; 
+        }
+
+        /* ************************************** */
+        /* تعديلات مخصصة للجوال (Mobile-Specific) */
+        /* ************************************** */
+        @media (max-width: 768px) {
+            main { 
+                flex-direction: column; 
+                padding-bottom: 120px; /* لإعطاء مساحة للسلة الثابتة */
+            }
+            
+            section { 
+                padding: 10px; 
+                margin-bottom: 10px;
+            }
+            
+            /* تثبيت السلة في أسفل الشاشة */
+            #cart-summary {
+                position: fixed; /* تثبيت الموقع */
+                bottom: 0; /* في الأسفل */
+                left: 0;
+                right: 0;
+                width: 100%;
+                z-index: 1000; /* لتبقى فوق كل شيء */
+                border-radius: 0;
+                margin-right: 0;
+                padding: 10px 15px;
+                box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            }
+            
+            /* إخفاء قائمة العطور في السلة على الجوال الصغير لتوفير مساحة */
+            #cart-list {
+                max-height: 50px;
+                overflow: hidden;
+                margin-bottom: 5px;
+            }
+            #cart-summary h2 {
+                display: none; /* إخفاء العنوان لتوفير مساحة */
+            }
+
+            /* ترتيب عناصر ملخص السلة في سطر واحد لتكون مدمجة */
+            #cart-summary > h3, #whatsapp-send-button {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin: 5px 0;
+            }
+            
+            #whatsapp-send-button {
+                font-size: 1em;
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -158,9 +274,6 @@
 
                     const processedProducts = [];
 
-                    // 💡 ملاحظة الأعمدة بناءً على الترتيب المشترك في الشيتات
-                    // C0: Name | C1: Description/Category | C2: Price | C3: Image Link | ... | C5: Price (العمود F)
-                    
                     // تجاوز السطر الأول (رؤوس الأعمدة) ويبدأ عد الأسطر من 2 في الشيت
                     for (let i = 0; i < rows.length; i++) {
                         
@@ -172,14 +285,13 @@
                         
                         const row = rows[i].c;
 
-                        // قراءة البيانات وتجنب الأخطاء عند وجود خلايا فارغة
-                        const productName = row[0]?.v || 'عطر غير مسمى';     
-                        const productCategoryRaw = row[1]?.v || ''; 
-                        const productPriceC2 = parseFloat(row[2]?.v) || 0; 
-                        const productImageLink = row[3]?.v || ''; 
-                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
+                        // قراءة البيانات بناءً على مواقع الأعمدة في الشيت:
+                        const productName = row[0]?.v || '';     // C0 (العمود A)
+                        const productCategoryRaw = row[1]?.v || ''; // C1 (العمود B: الوصف)
+                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2 (العمود C)
+                        const productImageLink = row[3]?.v || ''; // C3 (العمود D)
+                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F: السعر)
                         
-                        // نستخدم السعر من العمود F (C5) كما طلبت، ونتجاهل السعر في C2 إذا كان F صالحاً
                         const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
 
                         // تجاهل السطور التي لا تحتوي على اسم أو سعر صالح
@@ -228,12 +340,7 @@
 
             const itemId = itemElement.dataset.id;
             
-            // تحقق من وجود المنتج بالفعل (مهم للتحقق من العروض)
-            // إذا كان المستخدم يضيف سلكتف، يمكن السماح بالتكرار بعد العرض المجاني
-            // لكن هنا نكتفي بالمنطق البسيط: لا تكرر نفس العطر بنفس المعرف
             if (cart.some(item => item.id === itemId)) {
-                 // للسماح بإضافة السلكتف بعد العرض المجاني، سنقوم بتغيير المعرف
-                 // لكن سنبقي على المنطق الحالي لعدم التعقيد
                  alert("هذا العطر مضاف بالفعل إلى السلة.");
                  return;
             }
@@ -245,7 +352,7 @@
                 basePrice: parseFloat(itemElement.dataset.price),
                 finalPrice: parseFloat(itemElement.dataset.price),
                 isDiscounted: false,
-                isFreeGift: false // مؤشر للهدية المجانية أو خصم 50%
+                isFreeGift: false
             };
             
             cart.push(item);
@@ -279,19 +386,12 @@
                     // العرض الأول: 1 نيش = سلكتف بنصف السعر (50%)
                     cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
                     cheapestSelective.isDiscounted = true;
-                    cheapestSelective.isFreeGift = false;
 
                 } else if (nicheCount >= 2) {
-                    // العرض الثاني: 2 نيش أو أكثر = سلكتف هدية مجانية (0$)
+                    // العرض الثاني: 2 نيش أو أكثر = سلكتف هدية مجانية (0₪)
                     cheapestSelective.finalPrice = 0;
                     cheapestSelective.isDiscounted = true;
                     cheapestSelective.isFreeGift = true;
-                }
-
-                // 4. تطبيق السعر العادي على أي عطور سلكتف أخرى مضافة بعد العرض المجاني
-                if (nicheCount >= 2 && selectiveItems.length > 1) {
-                    // العطر الأول هو مجاني (تم التعامل معه أعلاه)
-                    // باقي عطور السلكتف تبقى بالسعر الأصلي (وهو ما تم في الخطوة 1)
                 }
             }
             renderCartSummary();
