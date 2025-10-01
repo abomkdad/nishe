@@ -54,10 +54,10 @@
 
     <script>
         // ******************************************************
-        // 1. رابط CSV من ملف Google Sheet الخاص بك (مجهز وصحيح)
+        // 1. رابط CSV من ملف Google Sheet الخاص بك
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWJMujOko7GbRtvG94b1bNA3TEeSNh7aL4AJFOazRcdlbGEThnkevfzuJXdSpo0ym8xK3KveAK_m0_/pub?output=csv"; 
         
-        // 2. رقم الواتساب الخاص بك (مجهز وصحيح)
+        // 2. رقم الواتساب الخاص بك
         const PHONE_NUMBER = "972522511749"; 
         // ******************************************************
 
@@ -71,33 +71,48 @@
             const result = [];
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
-                // استخدام التعبير العادي لتقسيم السطور بذكاء (لأخذ في الاعتبار الفواصل داخل الأسماء)
                 const currentline = lines[i].match(/(".*?"|[^",\s]+)(?=\s*\,|\s*$)/g);
                 if (!currentline) continue;
                 
                 const obj = {};
+                let description = ''; 
+                let websitePrice = 0;
+                let imageLink = '';
+                
                 for (let j = 0; j < headers.length; j++) {
                     let value = (currentline[j] || "").replace(/"/g, "").trim();
                     
-                    // تعيين القيم الرئيسية بناءً على الأعمدة الأكثر شيوعاً (أو الأعمدة الموجودة في الشيت الخاص بك)
-                    if (headers[j] === 'Code' || headers[j] === 'ID') {
+                    // قراءة الأعمدة بناءً على أسماء رؤوس الشيت الخاص بك
+                    if (headers[j] === 'Code') {
                         obj.ID = value;
-                    } else if (headers[j] === 'Description' || headers[j] === 'Name') {
-                        obj.Name = value;
-                    } else if (headers[j] === 'Type' || headers[j] === 'Category') { // تم إضافة 'Category' كبديل
-                        obj.Type = value; 
-                    } else if (headers[j] === 'website price' || headers[j] === 'Price') {
-                        obj.Price = parseFloat(value);
-                    } else if (headers[j] === 'imge link' || headers[j] === 'ImageURL') {
-                        obj.ImageURL = value;
+                    } else if (headers[j] === 'Description') {
+                        description = value;
+                    } else if (headers[j].toLowerCase().includes('price')) { // مرونة أكبر للسعر
+                        websitePrice = parseFloat(value);
+                    } else if (headers[j].toLowerCase().includes('link')) { // مرونة أكبر للرابط
+                        imageLink = value;
+                    } else if (headers[j].toLowerCase().includes('symbol')) { 
+                        // يمكن استخدام هذا العمود لتحديد الفئة الفرعية إذا لزم الأمر
                     }
                 }
                 
-                // التأكد من أن التصنيف موجود (افتراضياً 'selective' إذا كان مفقوداً)
-                if (!obj.Type) {
-                    obj.Type = 'selective'; 
-                }
+                // تحديد التصنيف (Type) واسم العطر (Name) بناءً على الوصف (عمود B)
+                obj.ImageURL = imageLink;
+                obj.Price = websitePrice;
+                obj.Name = obj.ID + ' - ' + description; // دمج الكود والوصف كاسم
                 
+                // *** منطق التصنيف الرئيسي ***
+                if (description.toLowerCase().includes('niche')) {
+                    obj.Type = 'niche';
+                } else if (description.toLowerCase().includes('men') || description.toLowerCase().includes('woman')) {
+                    obj.Type = 'selective'; 
+                } else if (obj.ID && (obj.ID.startsWith('N') || obj.ID.startsWith('D')) && websitePrice >= 300) { 
+                    // إذا لم يكن هناك وصف صريح، قد نعتمد على السعر والكود (افتراضاً)
+                    obj.Type = 'niche'; 
+                } else {
+                    obj.Type = 'selective'; // افتراضياً سلكتف لأي شيء آخر
+                }
+
                 // التأكد من أن العناصر الأساسية موجودة وصالحة قبل الإضافة
                 if (obj.ID && obj.Name && !isNaN(obj.Price) && obj.Price > 0) {
                     result.push(obj);
@@ -118,7 +133,8 @@
                 allPerfumes = allPerfumes.map(p => ({
                     ID: p.ID,
                     Name: p.Name,
-                    Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', // ضمان فرز جميع العطور التي تحمل كلمة 'niche'
+                    // تأكيد التصنيف باستخدام الكلمة المفتاحية
+                    Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', 
                     Price: p.Price,
                     ImageURL: p.ImageURL
                 })).filter(p => !isNaN(p.Price) && p.Price > 0); 
@@ -177,7 +193,7 @@
             return div;
         }
 
-        // دالة إضافة عطر للسلة
+        // دالة إضافة عطر للسلة (محدثة)
         function addToCart(event) {
             const itemElement = event.target.closest('.perfume-item');
             if (!itemElement) return;
@@ -201,7 +217,7 @@
             updateCartAndOffers();
         }
 
-        // دالة تحديث العروض
+        // دالة تحديث العروض (محدثة)
         function updateCartAndOffers() {
             cart.forEach(item => {
                 if (item.type === 'selective') {
