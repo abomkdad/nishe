@@ -75,40 +75,39 @@
                 if (!currentline) continue;
                 
                 const obj = {};
-                let description = ''; 
-                let websitePrice = 0;
+                let name = ''; 
+                let description = '';
+                let price = 0;
                 let imageLink = '';
                 
                 for (let j = 0; j < headers.length; j++) {
                     let value = (currentline[j] || "").replace(/"/g, "").trim();
                     
-                    // قراءة الأعمدة بناءً على أسماء رؤوس الشيت الخاص بك
-                    if (headers[j] === 'Code') {
-                        obj.ID = value;
-                    } else if (headers[j] === 'Description') { // عمود التصنيف
+                    // قراءة الأعمدة بناءً على رؤوس الأعمدة الجديدة
+                    if (headers[j] === 'a perfume name') { // اسم العطر
+                        name = value;
+                        obj.ID = value.substring(0, 50); // استخدام جزء من الاسم كمعرف ID
+                    } else if (headers[j] === 'e Description') { // التصنيف
                         description = value;
-                    } else if (headers[j] === 'website price') { // عمود السعر
-                        websitePrice = parseFloat(value);
-                    } else if (headers[j] === 'imge link') { // عمود رابط الصورة
+                    } else if (headers[j] === 'f price') { // السعر
+                        price = parseFloat(value);
+                    } else if (headers[j] === 'd imege link') { // رابط الصورة
                         imageLink = value;
                     } 
                 }
                 
-                // تحديد التصنيف (Type) واسم العطر (Name) بناءً على الوصف
+                // تعيين القيم النهائية
                 obj.ImageURL = imageLink;
-                obj.Price = websitePrice;
+                obj.Price = price;
+                obj.Name = name;
                 
-                // تحديد اسم العطر (نستخدم الوصف إذا كان متاحاً وإلا نستخدم الكود)
-                obj.Name = description && description.length > 3 ? description + ' - ' + obj.ID : obj.ID; 
-                
-                // *** منطق التصنيف الرئيسي بناءً على عمود Description ***
+                // *** منطق التصنيف الرئيسي بناءً على عمود e Description ***
                 if (description.toLowerCase().includes('niche')) {
                     obj.Type = 'niche';
                 } else if (description.toLowerCase().includes('men') || description.toLowerCase().includes('woman')) {
                     obj.Type = 'selective'; 
-                } else if (obj.Name.toLowerCase().includes('niche') || obj.Name.toLowerCase().includes('nishe')) {
-                    // تصنيف العطور التي ظهرت في الشيت الأخير كـ NISHE
-                     obj.Type = 'niche';
+                } else if (name.toLowerCase().includes('niche')) { 
+                    obj.Type = 'niche'; 
                 } else {
                     obj.Type = 'selective'; // افتراضياً سلكتف لأي شيء آخر
                 }
@@ -133,7 +132,6 @@
                 allPerfumes = allPerfumes.map(p => ({
                     ID: p.ID,
                     Name: p.Name,
-                    // تأكيد التصنيف باستخدام الكلمة المفتاحية
                     Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', 
                     Price: p.Price,
                     ImageURL: p.ImageURL
