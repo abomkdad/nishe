@@ -164,7 +164,7 @@
     /* زر واتساب العائم */
     #floating-whatsapp {
       position: fixed;
-      bottom: 140px; /* تم رفعه قليلاً */
+      bottom: 150px; /* تم رفعه قليلاً */
       left: 15px;
       background-color: var(--whatsapp-color);
       color: #fff;
@@ -196,11 +196,7 @@
     /* تعديلات اللغة */
     [lang="he"] { direction: rtl; }
     [lang="he"] #floating-whatsapp { left: auto; right: 15px; }
-    [lang="he"] #floating-whatsapp i { margin-inline-start: 8px; margin-inline-end: 0; }
-  
-    /* رفع زر واتساب قليلاً */
-    #floating-whatsapp { bottom: 150px !important; }
-  </style>
+    [lang="he"] #floating-whatsapp i { margin-inline-start: 8px; margin-inline-end: 0; }</style>
 </head>
 <body lang="ar">
   <header>
@@ -241,6 +237,14 @@ const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5t
 const PHONE_NUMBER = '972522511749';
 const CURRENCY_SYMBOL = ' ₪';
 const SHIPPING_FEE = 50;
+
+// تصنيف صارم حسب أرقام الصفوف كما طلبت:
+// 2–109 رجالي، 110–231 نسائي، 232–289 نيش
+const ROWS_RANGES = {
+  men:   { start: 2,   end: 109 },
+  woman: { start: 110, end: 231 },
+  niche: { start: 232, end: 289 }
+};
 
 const DICT = {
   ar: {
@@ -455,31 +459,44 @@ function detectType(productName, typeRaw){
 }
 
 function fetchAndProcessProducts() {
-  $.get(SHEET_URL, function(response){
-    try{
+  $.get(SHEET_URL, function (response) {
+    try {
       const match = response.match(/google\.visualization\.Query\.setResponse\((.*)\)/);
-      if(!match || !match[1]) throw new Error('Bad sheet response');
+      if (!match || !match[1]) throw new Error('Bad sheet response');
       const jsonData = JSON.parse(match[1]);
       const rows = (jsonData.table && jsonData.table.rows) ? jsonData.table.rows : [];
       const processed = [];
-      for (let i=0; i<rows.length; i++){
+
+      const num = v => (typeof v === 'number') ? v 
+                     : (typeof v === 'string') ? (parseFloat(v.replace(/[^0-9.]/g,'')) || 0)
+                     : 0;
+
+      for (let i = 0; i < rows.length; i++) {
         const c = rows[i].c || [];
-        const name = (c[0] && c[0].v) ? String(c[0].v).trim() : '';
-        const priceC2 = parseNumber(c[2] && c[2].v);
-        const image = (c[3] && c[3].v) ? String(c[3].v).trim() : '';
-        const typeRaw = (c[4] && c[4].v) ? c[4].v : '';
-        const priceF = parseNumber(c[5] && c[5].v);
+        const sheetRow = i + 2; // رقم الصف الفعلي في الشيت
+        const name     = (c[0] && c[0].v) ? String(c[0].v).trim() : '';
+        const priceC2  = num(c[2] && c[2].v);
+        const image    = (c[3] && c[3].v) ? String(c[3].v).trim() : '';
+        const priceF   = num(c[5] && c[5].v);
         const finalPrice = priceF > 0 ? priceF : priceC2;
         if (!name || finalPrice <= 0) continue;
-        const type = detectType(name, typeRaw);
+
+        // تصنيف صارم حسب أرقام الصفوف: 2–109 رجالي، 110–231 نسائي، 232–289 نيش
+        let type = '';
+        if (sheetRow >= 2 && sheetRow <= 109) type = 'selective_men';
+        else if (sheetRow >= 110 && sheetRow <= 231) type = 'selective_woman';
+        else if (sheetRow >= 232 && sheetRow <= 289) type = 'niche';
+        else continue; // خارج النطاقات المطلوبة
+
         processed.push({
-          id: name.substring(0,50) + '-' + (i+2),
+          id: name.substring(0,50) + '-' + sheetRow,
           name: (type==='selective_men' ? DICT[currentLang].type_men_prefix : (type==='selective_woman' ? DICT[currentLang].type_woman_prefix : '')) + name,
           price: finalPrice,
           image: image,
           type: type
         });
       }
+
       allPerfumes = processed;
       if (allPerfumes.length === 0) {
         document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
@@ -487,11 +504,11 @@ function fetchAndProcessProducts() {
         renderPerfumes();
       }
       document.getElementById('whatsapp-send-button').disabled = cart.length === 0;
-    } catch(e){
+    } catch (e) {
       console.error('Sheet parse error:', e);
       document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
     }
-  }).fail(function(){
+  }).fail(function () {
     document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
   });
 }
