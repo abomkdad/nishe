@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عروض العطور النيش والسلكتف الحصرية</title>
+    
+    <style>
+        body { font-family: Tahoma, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
+        header { background-color: #5d4037; color: white; padding: 20px; text-align: center; }
+        h1 { margin: 0; }
+        main { display: flex; max-width: 1200px; margin: 20px auto; padding: 0 15px; flex-wrap: wrap; }
+        section { flex: 3; padding: 20px; background: white; border-radius: 8px; margin-bottom: 20px; }
+        #cart-summary { flex: 1; padding: 20px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; position: sticky; top: 20px; height: fit-content; min-width: 250px; margin-right: 20px; }
+        .perfume-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+        .perfume-item { border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; transition: transform 0.2s; }
+        .perfume-item:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .perfume-item img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
+        .add-to-cart { background-color: #8d6e63; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; margin-top: 10px; font-weight: bold; width: 100%; }
+        .add-to-cart:hover { background-color: #6d4c41; }
+        #cart-list { list-style: none; padding: 0; }
+        #cart-list li { margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dotted #ccc; font-size: 0.9em; }
+        #total-price { font-weight: bold; color: #b71c1c; font-size: 1.5em; }
+        .gift { color: green; font-weight: bold; }
+        .discount { color: orange; font-weight: bold; }
+        #whatsapp-send-button { background-color: #25D366; color: white; border: none; padding: 12px; width: 100%; margin-top: 15px; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; }
+        #whatsapp-send-button:hover { background-color: #1FAF59; }
+
+        @media (max-width: 900px) {
+            main { flex-direction: column; }
+            #cart-summary { margin-right: 0; order: -1; } /* وضع الملخص في الأعلى على الشاشات الصغيرة */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>✨ عروض العطور الفاخرة لا تُقاوم! ✨</h1>
+        <p>⭐ اختر عطور **النيش** واستفد من الخصومات أو الهدايا على عطور **السلكتف**.</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>عطور النيش الفاخرة</h2>
+            <div class="perfume-grid">
+                <div class="perfume-item" data-id="N1" data-type="niche" data-price="200" data-name="عطر نيش عنبر 1">
+                    <img src="images/niche/niche1.jpg" alt="عطر نيش عنبر 1">
+                    <h3>عطر نيش عنبر 1</h3>
+                    <p>السعر: 200$</p>
+                    <button class="add-to-cart">أضف للسلة</button>
+                </div>
+                <div class="perfume-item" data-id="N2" data-type="niche" data-price="250" data-name="عطر نيش جلد 2">
+                    <img src="images/niche/niche2.jpg" alt="عطر نيش جلد 2">
+                    <h3>عطر نيش جلد 2</h3>
+                    <p>السعر: 250$</p>
+                    <button class="add-to-cart">أضف للسلة</button>
+                </div>
+                </div>
+
+            <hr style="margin: 30px 0;">
+
+            <h2>عطور السلكتف (نسائية ورجالية)</h2>
+            <p>يمكن تطبيق العرض على أي عطر من هذه المجموعة.</p>
+            <div class="perfume-grid">
+                <div class="perfume-item" data-id="SW1" data-type="selective" data-price="100" data-name="نسائي سلكتف زهري">
+                    <img src="images/selective-women/sw1.jpg" alt="نسائي سلكتف زهري">
+                    <h3>نسائي سلكتف زهري</h3>
+                    <p>السعر: 100$</p>
+                    <button class="add-to-cart">أضف للسلة</button>
+                </div>
+                <div class="perfume-item" data-id="SM1" data-type="selective" data-price="90" data-name="رجالي سلكتف توابل">
+                    <img src="images/selective-men/sm1.jpg" alt="رجالي سلكتف توابل">
+                    <h3>رجالي سلكتف توابل</h3>
+                    <p>السعر: 90$</p>
+                    <button class="add-to-cart">أضف للسلة</button>
+                </div>
+                </div>
+        </section>
+
+        <aside id="cart-summary">
+            <h2>🛒 ملخص السلة</h2>
+            <ul id="cart-list">
+                </ul>
+            <h3>الإجمالي: <span id="total-price">0.00$</span></h3>
+            
+            <button id="whatsapp-send-button">
+                أرسل لي الطلب عبر واتساب
+            </button>
+            
+            <p style="font-size: 0.85em; margin-top: 15px; color: #666;">* يتم تطبيق العرض تلقائيًا على أرخص عطر سلكتف في السلة.</p>
+        </aside>
+    </main>
+
+    <script>
+        let cart = []; // مصفوفة لتخزين العطور في السلة
+
+        function addToCart(event) {
+            const itemElement = event.target.closest('.perfume-item');
+            if (!itemElement) return;
+
+            const itemId = itemElement.dataset.id;
+            
+            // منع إضافة نفس العطر مرتين
+            if (cart.some(item => item.id === itemId)) {
+                alert("هذا العطر مضاف بالفعل إلى السلة.");
+                return;
+            }
+
+            const item = {
+                id: itemId,
+                name: itemElement.dataset.name,
+                type: itemElement.dataset.type,
+                basePrice: parseFloat(itemElement.dataset.price),
+                finalPrice: parseFloat(itemElement.dataset.price),
+                isDiscounted: false 
+            };
+            
+            cart.push(item);
+            updateCartAndOffers();
+        }
+
+        function updateCartAndOffers() {
+            // 1. إعادة تعيين أسعار السلكتف قبل تطبيق العروض الجديدة
+            cart.forEach(item => {
+                if (item.type === 'selective') {
+                    item.finalPrice = item.basePrice; 
+                    item.isDiscounted = false;
+                }
+            });
+
+            // 2. حساب عدد عطور النيش
+            const nicheCount = cart.filter(item => item.type === 'niche').length;
+
+            // 3. تحديد أرخص عطر سلكتف في السلة لتطبيق العرض عليه
+            let selectiveItems = cart
+                .filter(item => item.type === 'selective')
+                .sort((a, b) => a.basePrice - b.basePrice); 
+
+            if (selectiveItems.length > 0) {
+                const cheapestSelective = selectiveItems[0]; // دائماً نطبق العرض على الأرخص
+
+                if (nicheCount === 1) {
+                    // العرض الأول: 1 نيش = سلكتف بنصف السعر (50%)
+                    cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
+                    cheapestSelective.isDiscounted = true;
+
+                } else if (nicheCount >= 2) {
+                    // العرض الثاني: 2 نيش أو أكثر = سلكتف هدية مجانية (0$)
+                    cheapestSelective.finalPrice = 0;
+                    cheapestSelective.isDiscounted = true;
+                }
+            }
+
+            // 4. تحديث عرض السلة والأسعار الإجمالية في HTML
+            renderCartSummary();
+        }
+
+        function renderCartSummary() {
+            const cartList = document.getElementById('cart-list');
+            const totalPriceElement = document.getElementById('total-price');
+            let total = 0;
+            cartList.innerHTML = ''; 
+
+            cart.forEach(item => {
+                total += item.finalPrice;
+                const li = document.createElement('li');
+                
+                let priceText = `${item.finalPrice.toFixed(2)}$`;
+
+                if (item.isDiscounted) {
+                    if (item.finalPrice === 0) {
+                        priceText = `<span class="gift">هدية مجانية!</span> <del>${item.basePrice.toFixed(2)}$</del>`;
+                    } else {
+                        priceText = `<span class="discount">${priceText}</span> <del>${item.basePrice.toFixed(2)}$</del> (خصم 50%)`;
+                    }
+                } else {
+                    priceText = `${item.basePrice.toFixed(2)}$`;
+                }
+
+                li.innerHTML = `<strong>${item.name}</strong> (${item.type === 'niche' ? 'نيش' : 'سلكتف'}): ${priceText}`;
+                cartList.appendChild(li);
+            });
+
+            totalPriceElement.textContent = total.toFixed(2) + '$';
+        }
+
+        // ********** دالة إرسال الطلب عبر واتساب **********
+        function sendOrderViaWhatsApp() {
+            if (cart.length === 0) {
+                alert("سلة المشتريات فارغة. الرجاء اختيار عطر واحد على الأقل.");
+                return;
+            }
+
+            const nicheCount = cart.filter(item => item.type === 'niche').length;
+            let message = "🎉 *طلب عطور جديد:*\n";
+            let total = 0;
+
+            // إضافة تفاصيل العطور إلى الرسالة
+            message += "\n*1. العطور المختارة:*\n";
+            cart.forEach(item => {
+                total += item.finalPrice;
+                let priceText = `${item.finalPrice.toFixed(2)}$`;
+
+                if (item.isDiscounted) {
+                    priceText = (item.finalPrice === 0) 
+                                ? "🎁 *هدية مجانية*"
+                                : "💰 *" + item.finalPrice.toFixed(2) + "$* (خصم 50%)";
+                } else {
+                    priceText = item.basePrice.toFixed(2) + "$";
+                }
+
+                message += `\n- ${item.name} (${item.type === 'niche' ? 'نيش' : 'سلكتف'}): ${priceText}`;
+            });
+
+            // إضافة ملخص العرض
+            let offerSummary = "\n\n*2. ملخص العرض:*";
+            if (nicheCount === 1) {
+                offerSummary += "\n- تم تطبيق عرض *عطر سلكتف بنصف السعر*.";
+            } else if (nicheCount >= 2) {
+                offerSummary += "\n- تم تطبيق عرض *عطر سلكتف هدية مجانية*.";
+            } else {
+                offerSummary += "\n- لم يتم تطبيق عرض بعد (اختر عطر نيش واحد على الأقل).";
+            }
+            message += offerSummary;
+            
+            // الإجمالي النهائي
+            message += `\n\n====================\n`;
+            message += `💵 *الإجمالي النهائي:* ${total.toFixed(2)}$`;
+            
+            // رابط الصفحة (لمراجعة الصور)
+            const pageUrl = window.location.href; 
+            message += `\n\nلمراجعة الطلب والصور، يمكنك زيارة: ${pageUrl}`;
+
+
+            // تشفير الرسالة لعنوان URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // *** استبدل هذا الرقم برقم الواتساب الخاص بك (رمز الدولة بدون +، مثال: 96650000000) ***
+            const phoneNumber = "9665xxxxxxxx"; 
+
+            // إنشاء رابط الواتساب وفتحه
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // إضافة مُستمعي الأحداث عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', addToCart);
+            });
+            
+            // ربط زر الواتساب بالدالة
+            document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
+        });
+    </script>
+</body>
+</html>
