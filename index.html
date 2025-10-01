@@ -85,30 +85,30 @@
                     // قراءة الأعمدة بناءً على أسماء رؤوس الشيت الخاص بك
                     if (headers[j] === 'Code') {
                         obj.ID = value;
-                    } else if (headers[j] === 'Description') {
+                    } else if (headers[j] === 'Description') { // عمود التصنيف
                         description = value;
-                    } else if (headers[j].toLowerCase().includes('price')) { // مرونة أكبر للسعر
+                    } else if (headers[j] === 'website price') { // عمود السعر
                         websitePrice = parseFloat(value);
-                    } else if (headers[j].toLowerCase().includes('link')) { // مرونة أكبر للرابط
+                    } else if (headers[j] === 'imge link') { // عمود رابط الصورة
                         imageLink = value;
-                    } else if (headers[j].toLowerCase().includes('symbol')) { 
-                        // يمكن استخدام هذا العمود لتحديد الفئة الفرعية إذا لزم الأمر
-                    }
+                    } 
                 }
                 
-                // تحديد التصنيف (Type) واسم العطر (Name) بناءً على الوصف (عمود B)
+                // تحديد التصنيف (Type) واسم العطر (Name) بناءً على الوصف
                 obj.ImageURL = imageLink;
                 obj.Price = websitePrice;
-                obj.Name = obj.ID + ' - ' + description; // دمج الكود والوصف كاسم
                 
-                // *** منطق التصنيف الرئيسي ***
+                // تحديد اسم العطر (نستخدم الوصف إذا كان متاحاً وإلا نستخدم الكود)
+                obj.Name = description && description.length > 3 ? description + ' - ' + obj.ID : obj.ID; 
+                
+                // *** منطق التصنيف الرئيسي بناءً على عمود Description ***
                 if (description.toLowerCase().includes('niche')) {
                     obj.Type = 'niche';
                 } else if (description.toLowerCase().includes('men') || description.toLowerCase().includes('woman')) {
                     obj.Type = 'selective'; 
-                } else if (obj.ID && (obj.ID.startsWith('N') || obj.ID.startsWith('D')) && websitePrice >= 300) { 
-                    // إذا لم يكن هناك وصف صريح، قد نعتمد على السعر والكود (افتراضاً)
-                    obj.Type = 'niche'; 
+                } else if (obj.Name.toLowerCase().includes('niche') || obj.Name.toLowerCase().includes('nishe')) {
+                    // تصنيف العطور التي ظهرت في الشيت الأخير كـ NISHE
+                     obj.Type = 'niche';
                 } else {
                     obj.Type = 'selective'; // افتراضياً سلكتف لأي شيء آخر
                 }
