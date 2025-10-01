@@ -49,7 +49,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        /* تصميم الكاروسيل (عرض أفقي مستقل) */
         .perfume-carousel { 
             display: flex;
             overflow-x: auto; 
@@ -85,7 +84,9 @@
             width: 100%;
             z-index: 1000;
             background-color: white;
-            box-shadow: 0 -4px 10px rgba(0,0 dreaded failure to load items 
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            border-top: 1px solid #ddd;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         #cart-summary { 
@@ -224,7 +225,8 @@
     <script>
         // ******************************************************
         // المتغيرات الثابتة واللغوية
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
+        // *تم التعديل لإضافة &callback=?*
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json&callback=?';
         const PHONE_NUMBER = "972522511749"; 
         const CURRENCY_SYMBOL = " ₪";
         const SHIPPING_FEE = 50; 
@@ -458,68 +460,72 @@
             document.getElementById('whatsapp-send-button').disabled = (cart.length === 0);
         }
 
-        // دالة معالجة بيانات الشيت (المُرسلة منك)
         function fetchAndProcessProducts() {
-            $.get(SHEET_URL, function (response) {
-                try {
-                    const jsonText = response.match(/google\.visualization\.Query\.setResponse\((.*)\)/)[1];
-                    const jsonData = JSON.parse(jsonText);
-                    const rows = jsonData.table.rows;
+            // استخدام $.ajax مع dataType: 'jsonp' للتحسين من تخطي حجب CORS
+            $.ajax({
+                url: SHEET_URL,
+                dataType: 'jsonp',
+                success: function(response) {
+                    try {
+                        // يجب أن تكون الاستجابة الآن كائن JavaScript مباشرةً
+                        const rows = response.table.rows;
+                        const processedProducts = [];
 
-                    const processedProducts = [];
+                        for (let i = 0; i < rows.length; i++) {
+                            
+                            const sheetRowNumber = i + 2; 
+                            if (sheetRowNumber > 289) break; 
+                            
+                            const row = rows[i].c;
 
-                    for (let i = 0; i < rows.length; i++) {
-                        
-                        const sheetRowNumber = i + 2; 
-                        if (sheetRowNumber > 289) break; 
-                        
-                        const row = rows[i].c;
+                            // C0: Name | C2: Price C | C3: Image Link | C5: Price F
+                            const productName = row[0]?.v || '';     
+                            const productPriceC2 = parseFloat(row[2]?.v) || 0; 
+                            const productImageLink = row[3]?.v || ''; 
+                            const priceFromF = parseFloat(row[5]?.v) || 0; 
+                            
+                            const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
 
-                        const productName = row[0]?.v || '';     // C0
-                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2
-                        const productImageLink = row[3]?.v || ''; // C3
-                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
-                        
-                        const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
+                            if (!productName || finalPrice === 0) continue; 
+                            
+                            let type = '';
+                            let namePrefix = '';
+                            
+                            // *** منطق التصنيف بناءً على رقم السطر ***
+                            if (sheetRowNumber >= ROWS_RANGES.niche.start && sheetRowNumber <= ROWS_RANGES.niche.end) {
+                                type = 'niche';
+                            } else if (sheetRowNumber >= ROWS_RANGES.selective_men.start && sheetRowNumber <= ROWS_RANGES.selective_men.end) {
+                                type = 'selective_men';
+                                namePrefix = DICT[currentLang].type_men_prefix;
+                            } else if (sheetRowNumber >= ROWS_RANGES.selective_woman.start && sheetRowNumber <= ROWS_RANGES.selective_woman.end) {
+                                type = 'selective_woman';
+                                namePrefix = DICT[currentLang].type_woman_prefix;
+                            } else {
+                                continue;
+                            }
 
-                        if (!productName || finalPrice === 0) continue; 
-                        
-                        let type = '';
-                        let namePrefix = '';
-                        
-                        // *** منطق التصنيف بناءً على رقم السطر ***
-                        if (sheetRowNumber >= ROWS_RANGES.niche.start && sheetRowNumber <= ROWS_RANGES.niche.end) {
-                            type = 'niche';
-                        } else if (sheetRowNumber >= ROWS_RANGES.selective_men.start && sheetRowNumber <= ROWS_RANGES.selective_men.end) {
-                            type = 'selective_men';
-                            namePrefix = DICT[currentLang].type_men_prefix;
-                        } else if (sheetRowNumber >= ROWS_RANGES.selective_woman.start && sheetRowNumber <= ROWS_RANGES.selective_woman.end) {
-                            type = 'selective_woman';
-                            namePrefix = DICT[currentLang].type_woman_prefix;
-                        } else {
-                            continue;
+                            processedProducts.push({
+                                id: productName.substring(0, 50) + '-' + sheetRowNumber,
+                                name: namePrefix + productName,
+                                price: finalPrice,
+                                image: productImageLink,
+                                type: type
+                            });
                         }
 
-                        processedProducts.push({
-                            id: productName.substring(0, 50) + '-' + sheetRowNumber,
-                            name: namePrefix + productName,
-                            price: finalPrice,
-                            image: productImageLink,
-                            type: type
-                        });
+                        allPerfumes = processedProducts;
+                        renderPerfumes();
+                        document.getElementById('whatsapp-send-button').disabled = false;
+
+                    } catch (e) {
+                        console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
+                        document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
                     }
-
-                    allPerfumes = processedProducts;
-                    renderPerfumes();
-                    document.getElementById('whatsapp-send-button').disabled = false;
-
-                } catch (e) {
-                    console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
+                },
+                error: function(xhr, status, error) {
+                    console.error("فشل الاتصال بملف الشيت:", status, error);
                     document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
                 }
-            }).fail(function() {
-                // التعامل مع فشل الاتصال بالخادم
-                document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
             });
         }
 
@@ -548,18 +554,18 @@
                     priceText = item.basePrice.toFixed(2) + CURRENCY_SYMBOL;
                 }
 
-                message += `\n- ${item.name}: ${priceText}`;
+                message += `\n- ${item.name} (${item.type.includes('niche') ? 'نيش' : 'سلكتف'}): ${priceText}`;
             });
             
             finalTotal = subtotal + SHIPPING_FEE;
 
             let offerSummary = "\n\n*2. ملخص العرض:*";
             if (nicheCount === 1) {
-                offerSummary += `\n- ${t.niche_header} + ${t.type_selective} بنصف السعر.`;
+                offerSummary += `\n- تم تطبيق عرض *عطر سلكتف بنصف السعر*.`;
             } else if (nicheCount >= 2) {
-                offerSummary += `\n- ${t.niche_header} + 1 ${t.type_selective} هدية مجانية.`;
+                offerSummary += `\n- تم تطبيق عرض *عطر سلكتف هدية مجانية*.`;
             } else {
-                offerSummary += `\n- ${t.msg_no_offer}`;
+                offerSummary += `\n- لم يتم تطبيق عرض.`;
             }
             
             message += offerSummary;
