@@ -194,7 +194,7 @@
             });
         }
 
-        // دالة لإنشاء عنصر عطر HTML
+        // دالة لإنشاء عنصر عطر HTML (تم التعديل لضمان HTTPS)
         function createPerfumeItem(perfume) {
             const div = document.createElement('div');
             div.className = 'perfume-item';
@@ -203,7 +203,12 @@
             div.dataset.price = perfume.Price;
             div.dataset.name = perfume.Name;
 
-            const imgUrl = perfume.ImageURL && perfume.ImageURL.trim() ? perfume.ImageURL : 'https://via.placeholder.com/180?text=No+Image';
+            let imgUrl = perfume.ImageURL && perfume.ImageURL.trim() ? perfume.ImageURL : 'https://via.placeholder.com/180?text=No+Image';
+
+            // *** منطق تصحيح الرابط لضمان HTTPS ***
+            if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
+                imgUrl = imgUrl.replace('http://', 'https://');
+            }
 
             div.innerHTML = `
                 <img src="${imgUrl}" alt="${perfume.Name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
