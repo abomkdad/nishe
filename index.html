@@ -235,5 +235,299 @@
   <script>
     // الكود الجافاسكربت كما هو بدون تغيير
   </script>
+<script>
+// ===== JavaScript: تفعيل الصفحة وعرض المنتجات =====
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
+const PHONE_NUMBER = '972522511749';
+const CURRENCY_SYMBOL = ' ₪';
+const SHIPPING_FEE = 50;
+
+const DICT = {
+  ar: {
+    title: '✨ عروض العطور الفاخرة لا تُقاوم! ✨',
+    subtitle: '⭐ اختر عطور النيش واستفد من الخصومات أو الهدايا.',
+    loading: 'جارٍ تحميل العطور...',
+    niche_header: 'عطور النيش الفاخرة',
+    niche_offer_msg: 'قم باختيار عطر أو عطرين نيش للحصول على العرض.',
+    men_header: 'عطور سلكتف رجالي',
+    woman_header: 'عطور سلكتف نسائي',
+    add_to_cart: 'أضف للسلة',
+    total_text: 'الإجمالي:',
+    shipping_text: 'رسوم التوصيل: ' + SHIPPING_FEE.toFixed(2) + CURRENCY_SYMBOL,
+    complete_order: 'إتمام الطلب',
+    cart_empty: 'سلة المشتريات فارغة.',
+    item_added: 'هذا العطر مضاف بالفعل إلى السلة.',
+    whatsapp_float: 'أرغب بالحصول على عرض النيش',
+    msg_gift: 'هدية مجانية',
+    msg_discount: 'خصم 50%',
+    msg_order_complete: 'طلب عطور جديد:',
+    msg_no_offer: 'لم يتم تطبيق عرض.',
+    type_men_prefix: 'رجالي: ',
+    type_woman_prefix: 'نسائي: ',
+    error_loading: 'عذراً، لم نتمكن من تحميل بيانات العطور. يرجى التأكد من أن رابط الشيت منشور بشكل صحيح.'
+  },
+  he: {
+    title: '✨ מבצעי בישום יוקרתיים! ✨',
+    subtitle: '⭐ בחר בשמי ניש וקבל הנחות או מתנות.',
+    loading: 'טוען בשמים...',
+    niche_header: 'בשמי ניש יוקרתיים',
+    niche_offer_msg: 'בחר בושם ניש אחד או שניים כדי לקבל את המבצע.',
+    men_header: 'בשמי סלקטיב לגבר',
+    woman_header: 'בשמי סלקטיב לאישה',
+    add_to_cart: 'הוסף לסל',
+    total_text: 'סה"כ:',
+    shipping_text: 'דמי משלוח: ' + SHIPPING_FEE.toFixed(2) + CURRENCY_SYMBOL,
+    complete_order: 'סיים הזמנה',
+    cart_empty: 'הסל ריק.',
+    item_added: 'פריט זה כבר קיים בסל.',
+    whatsapp_float: 'אני רוצה את מבצע הניש',
+    msg_gift: 'מתנה חינם',
+    msg_discount: '50% הנחה',
+    msg_order_complete: 'הזמנת בשמים חדשה:',
+    msg_no_offer: 'לא הוחל מבצע.',
+    type_men_prefix: 'גבר: ',
+    type_woman_prefix: 'אישה: ',
+    error_loading: 'אנו מצטערים, לא הצלחנו לטעון את נתוני הבשמים. אנא ודא שהקישור לגליון הנתונים פעיל ופורסם.'
+  }
+};
+
+let currentLang = 'ar';
+let allPerfumes = [];
+let cart = [];
+
+function setLanguage() {
+  const browserLang = navigator.language.substring(0, 2).toLowerCase();
+  if (browserLang === 'he' || document.documentElement.lang === 'he') {
+    currentLang = 'he';
+    document.documentElement.setAttribute('lang', 'he');
+    document.documentElement.setAttribute('dir', 'rtl');
+  } else {
+    currentLang = 'ar';
+    document.documentElement.setAttribute('lang', 'ar');
+    document.documentElement.setAttribute('dir', 'rtl');
+  }
+  updateTexts();
+}
+
+function updateTexts() {
+  const t = DICT[currentLang];
+  document.getElementById('page-title').textContent = t.title;
+  document.getElementById('header-title').textContent = t.title;
+  document.getElementById('header-subtitle').textContent = t.subtitle;
+  document.getElementById('loading-message').textContent = t.loading;
+  document.getElementById('total-text').textContent = t.total_text;
+  document.getElementById('whatsapp-send-button').textContent = t.complete_order;
+  document.getElementById('whatsapp-float-text').textContent = t.whatsapp_float;
+  const floatA = document.getElementById('floating-whatsapp');
+  floatA.href = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(t.whatsapp_float)}`;
+  floatA.title = t.whatsapp_float;
+}
+
+function addToCart(e) {
+  const card = e.target.closest('.perfume-item');
+  const id = card.dataset.id;
+  const exists = cart.some(i => i.id === id);
+  const t = DICT[currentLang];
+  if (exists) { alert(t.item_added); return; }
+  const basePrice = parseFloat(card.dataset.price) || 0;
+  cart.push({ id, name: card.dataset.name, type: card.dataset.type, basePrice, finalPrice: basePrice, isDiscounted: false, isFreeGift: false });
+  updateCartAndOffers();
+}
+
+function removeItemFromCart(index) {
+  cart.splice(index, 1);
+  updateCartAndOffers();
+}
+
+function createPerfumeItem(perfume) {
+  const div = document.createElement('div');
+  div.className = 'perfume-item';
+  div.dataset.id = perfume.id;
+  div.dataset.type = perfume.type;
+  div.dataset.price = perfume.price;
+  div.dataset.name = perfume.name;
+
+  let imgUrl = perfume.image && perfume.image.trim() ? perfume.image : 'https://via.placeholder.com/180?text=No+Image';
+  if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) { imgUrl = imgUrl.replace('http://', 'https://'); }
+
+  const t = DICT[currentLang];
+  div.innerHTML = `
+    <img src="${imgUrl}" alt="${perfume.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
+    <h3>${perfume.name}</h3>
+    <p>${perfume.price.toFixed(2)}${CURRENCY_SYMBOL}</p>
+    <button class="add-to-cart">${t.add_to_cart}</button>
+  `;
+  return div;
+}
+
+function renderPerfumes() {
+  const displaySection = document.getElementById('perfume-display');
+  displaySection.innerHTML = '';
+
+  const nichePerfumes = allPerfumes.filter(p => p.type === 'niche');
+  const selectiveMenPerfumes = allPerfumes.filter(p => p.type === 'selective_men');
+  const selectiveWomanPerfumes = allPerfumes.filter(p => p.type === 'selective_woman');
+
+  const t = DICT[currentLang];
+  displaySection.innerHTML += `
+    <div class="offer-message">${t.niche_offer_msg}</div>
+    <h2>${t.niche_header}</h2>
+    <div class="perfume-carousel" id="niche-carousel"></div>
+  `;
+  const nicheCarousel = document.getElementById('niche-carousel');
+  nichePerfumes.forEach(p => nicheCarousel.appendChild(createPerfumeItem(p)));
+
+  displaySection.innerHTML += `<hr style="margin: 30px 0;"><h2>${t.men_header}</h2><div class="perfume-carousel" id="selective-men-carousel"></div>`;
+  const selectiveMenCarousel = document.getElementById('selective-men-carousel');
+  selectiveMenPerfumes.forEach(p => selectiveMenCarousel.appendChild(createPerfumeItem(p)));
+
+  displaySection.innerHTML += `<hr style="margin: 30px 0;"><h2>${t.woman_header}</h2><div class="perfume-carousel" id="selective-woman-carousel"></div>`;
+  const selectiveWomanCarousel = document.getElementById('selective-woman-carousel');
+  selectiveWomanPerfumes.forEach(p => selectiveWomanCarousel.appendChild(createPerfumeItem(p)));
+
+  document.querySelectorAll('.add-to-cart').forEach(btn => btn.addEventListener('click', addToCart));
+}
+
+function updateCartAndOffers() {
+  cart.forEach(item => { item.finalPrice = item.basePrice; item.isDiscounted = false; item.isFreeGift = false; });
+
+  const nicheCount = cart.filter(i => i.type === 'niche').length;
+  const selectiveItems = cart.filter(i => i.type.startsWith('selective')).sort((a,b) => a.basePrice - b.basePrice);
+
+  if (selectiveItems.length > 0) {
+    const cheapest = selectiveItems[0];
+    if (nicheCount === 1) { cheapest.finalPrice = cheapest.basePrice / 2; cheapest.isDiscounted = true; }
+    else if (nicheCount >= 2) { cheapest.finalPrice = 0; cheapest.isDiscounted = true; cheapest.isFreeGift = true; }
+  }
+
+  renderCartSummary();
+}
+
+function renderCartSummary() {
+  const cartList = document.getElementById('cart-list');
+  const totalPriceDisplay = document.getElementById('total-price-display');
+  const shippingInfo = document.getElementById('shipping-info');
+  const t = DICT[currentLang];
+
+  cartList.innerHTML = '';
+  let subtotal = 0;
+
+  cart.forEach((item, index) => {
+    subtotal += item.finalPrice;
+    const li = document.createElement('li');
+    let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
+    if (item.isDiscounted) { priceText = item.isFreeGift ? `<span class=\"gift\">${t.msg_gift}</span>` : `<span class=\"discount\">${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}</span> (${t.msg_discount})`; }
+    li.innerHTML = `
+      <div>
+        <i class=\"fas fa-trash-alt delete-item\" onclick=\"removeItemFromCart(${index})\"></i>
+        ${item.name}
+      </div>
+      <span>${priceText}</span>
+    `;
+    cartList.appendChild(li);
+  });
+
+  let finalTotal = subtotal;
+  if (subtotal > 0) { finalTotal += SHIPPING_FEE; shippingInfo.textContent = t.shipping_text; } else { shippingInfo.textContent = ''; }
+
+  totalPriceDisplay.textContent = finalTotal.toFixed(2) + CURRENCY_SYMBOL;
+  document.getElementById('whatsapp-send-button').disabled = cart.length === 0;
+}
+
+function parseNumber(v){
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') {
+    const n = parseFloat(v.replace(/[^0-9.]/g,''));
+    return isNaN(n) ? 0 : n;
+  }
+  return 0;
+}
+
+function detectType(productName, typeRaw){
+  const t = (typeRaw || '').toLowerCase();
+  if (['niche','ניש','نيش'].includes(t)) return 'niche';
+  if (['selective_men','men','رجالي','לגבר','גבר'].includes(t)) return 'selective_men';
+  if (['selective_woman','women','نسائي','לאישה','אישה'].includes(t)) return 'selective_woman';
+  const low = (productName || '').toLowerCase();
+  if (low.includes('رجالي') || low.includes(' men ') || low.includes('לגבר') || low.includes(' גבר')) return 'selective_men';
+  if (low.includes('نسائي') || low.includes(' women ') || low.includes('לאישה') || low.includes(' אישה')) return 'selective_woman';
+  return 'niche';
+}
+
+function fetchAndProcessProducts() {
+  $.get(SHEET_URL, function(response){
+    try{
+      const match = response.match(/google\.visualization\.Query\.setResponse\((.*)\)/);
+      if(!match || !match[1]) throw new Error('Bad sheet response');
+      const jsonData = JSON.parse(match[1]);
+      const rows = (jsonData.table && jsonData.table.rows) ? jsonData.table.rows : [];
+      const processed = [];
+      for (let i=0; i<rows.length; i++){
+        const c = rows[i].c || [];
+        const name = (c[0] && c[0].v) ? String(c[0].v).trim() : '';
+        const priceC2 = parseNumber(c[2] && c[2].v);
+        const image = (c[3] && c[3].v) ? String(c[3].v).trim() : '';
+        const typeRaw = (c[4] && c[4].v) ? c[4].v : '';
+        const priceF = parseNumber(c[5] && c[5].v);
+        const finalPrice = priceF > 0 ? priceF : priceC2;
+        if (!name || finalPrice <= 0) continue;
+        const type = detectType(name, typeRaw);
+        processed.push({
+          id: name.substring(0,50) + '-' + (i+2),
+          name: (type==='selective_men' ? DICT[currentLang].type_men_prefix : (type==='selective_woman' ? DICT[currentLang].type_woman_prefix : '')) + name,
+          price: finalPrice,
+          image: image,
+          type: type
+        });
+      }
+      allPerfumes = processed;
+      if (allPerfumes.length === 0) {
+        document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
+      } else {
+        renderPerfumes();
+      }
+      document.getElementById('whatsapp-send-button').disabled = cart.length === 0;
+    } catch(e){
+      console.error('Sheet parse error:', e);
+      document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
+    }
+  }).fail(function(){
+    document.getElementById('perfume-display').innerHTML = `<h2>${DICT[currentLang].error_loading}</h2>`;
+  });
+}
+
+function sendOrderViaWhatsApp() {
+  const t = DICT[currentLang];
+  if (cart.length === 0) { alert(t.cart_empty); return; }
+  const nicheCount = cart.filter(x=>x.type==='niche').length;
+  let subtotal = 0;
+  const lines = cart.map(item=>{
+    subtotal += item.finalPrice;
+    if (item.isFreeGift) return `- ${item.name}: 🎁 *${t.msg_gift}*`;
+    if (item.isDiscounted) return `- ${item.name}: 💰 *${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}* (${t.msg_discount})`;
+    return `- ${item.name}: ${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}`;
+  });
+  const finalTotal = subtotal + SHIPPING_FEE;
+  let offerSummary = `\n\n*2. ${t.niche_header}*`;
+  if (nicheCount === 1) offerSummary += `\n- نيش + سلكتف بنصف السعر`;
+  else if (nicheCount >= 2) offerSummary += `\n- نيش + سلكتف هدية مجانية`;
+  else offerSummary += `\n- ${t.msg_no_offer}`;
+  let message = `🎉 *${t.msg_order_complete}*\n\n*1. פריטים:*\n` + lines.join('\n');
+  message += offerSummary;
+  message += `\n\n====================\n`;
+  message += `🚚 ${t.shipping_text}`;
+  message += `\n💵 *${t.total_text}* ${finalTotal.toFixed(2)}${CURRENCY_SYMBOL}`;
+  const pageUrl = window.location.href;
+  message += `\n\n${t.complete_order} عبر الرابط: ${pageUrl}`;
+  window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+window.removeItemFromCart = removeItemFromCart;
+document.addEventListener('DOMContentLoaded', ()=>{
+  setLanguage();
+  fetchAndProcessProducts();
+  document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
+});
+</script>
 </body>
 </html>
