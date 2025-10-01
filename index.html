@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
-        /* ... (تنسيقات CSS السابقة بقيت كما هي لضمان التصميم المطلوب) ... */
         :root {
             --primary-color: #5d4037;
             --secondary-color: #8d6e63;
@@ -25,7 +24,9 @@
             padding: 0; 
             background-color: var(--background-color); 
             color: #333; 
+            /* مساحة إضافية للسلة الثابتة */
             padding-bottom: 120px; 
+            min-height: 100vh;
         }
         
         header { 
@@ -49,10 +50,10 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
+        /* تصميم الكاروسيل (عرض أفقي مستقل) */
         .perfume-carousel { 
             display: flex;
             overflow-x: auto; 
-            scroll-snap-type: x mandatory; 
             padding: 10px 0;
             gap: 12px;
             margin-top: 15px;
@@ -63,9 +64,8 @@
         .perfume-carousel::-webkit-scrollbar { display: none; }
         
         .perfume-item { 
-            flex: 0 0 150px;
+            flex: 0 0 150px; /* ثابتة العرض للجوال */
             border: 1px solid #ddd; padding: 8px; text-align: center; background: #fff; border-radius: 6px; 
-            scroll-snap-align: start; 
             transition: transform 0.2s; 
         }
         .perfume-item img { width: 100%; height: auto; max-height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
@@ -79,7 +79,7 @@
 
         /* تصميم العربة الثابتة */
         #cart-container {
-            position: fixed;
+            position: fixed; /* تثبيت في أسفل الشاشة */
             bottom: 0;
             left: 0;
             right: 0;
@@ -103,6 +103,7 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
+            margin-left: 10px;
         }
 
         #cart-list {
@@ -124,7 +125,7 @@
         .delete-item {
             cursor: pointer;
             color: var(--delete-color);
-            margin-right: 5px;
+            margin-left: 5px; /* تم تعديل الاتجاه ليلائم اليمين لليسار */
             font-size: 1em;
             opacity: 0.7;
             transition: opacity 0.2s;
@@ -143,7 +144,7 @@
             color: white; border: none; padding: 10px 15px; 
             border-radius: 5px; cursor: pointer; 
             font-size: 1em; font-weight: bold; 
-            margin-right: 10px;
+            margin-right: 5px;
             white-space: nowrap;
         }
         
@@ -156,7 +157,7 @@
         #floating-whatsapp {
             position: fixed;
             bottom: 110px;
-            left: 15px;
+            left: 15px; /* يظهر على اليسار في RTL */
             background-color: var(--whatsapp-color);
             color: white;
             padding: 8px 12px;
@@ -184,15 +185,13 @@
             border: 1px solid #c8e6c9;
         }
 
-        /* تعديلات اللغة (لضبط اتجاه النص عند الحاجة) */
+        /* تعديلات اللغة (HE) */
+        [lang="he"] { direction: rtl; }
         [lang="he"] #floating-whatsapp { left: auto; right: 15px; }
-        [lang="he"] #floating-whatsapp i { margin-left: 0; margin-right: 8px; }
-
-        @media (max-width: 768px) {
-            main { padding-bottom: 120px; }
-            #cart-summary { padding: 10px 15px; } /* لإزالة التثبيت القديم */
-            #cart-list { max-height: 50px; }
-        }
+        [lang="he"] #floating-whatsapp i { margin-left: 8px; margin-right: 0; }
+        [lang="he"] #cart-details { margin-left: 0; margin-right: 10px; }
+        [lang="he"] .delete-item { margin-left: 0; margin-right: 5px; }
+        [lang="he"] #whatsapp-send-button { margin-right: 0; margin-left: 5px; }
     </style>
 </head>
 <body lang="ar">
@@ -227,7 +226,7 @@
 
     <script>
         // ******************************************************
-        // المتغيرات الثابتة والمحلية
+        // المتغيرات الثابتة واللغوية
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
         const PHONE_NUMBER = "972522511749"; 
         const CURRENCY_SYMBOL = " ₪";
@@ -259,11 +258,9 @@
                 msg_discount: 'خصم 50%',
                 msg_order_complete: 'طلب عطور جديد:',
                 msg_no_offer: 'لم يتم تطبيق عرض.',
-                type_niche: 'نيش',
-                type_selective: 'سلكتف',
                 type_men_prefix: 'رجالي: ',
                 type_woman_prefix: 'نسائي: ',
-                error_loading: 'عذراً، لم نتمكن من تحميل بيانات العطور. يرجى التحقق من اتصالك بالإنترنت.'
+                error_loading: 'عذراً، لم نتمكن من تحميل بيانات العطور. يرجى التحقق من رابط الشيت أو اتصالك بالإنترنت.'
             },
             he: {
                 title: '✨ מבצעי בישום יוקרתיים! ✨',
@@ -284,8 +281,6 @@
                 msg_discount: '50% הנחה',
                 msg_order_complete: 'הזמנת בשמים חדשה:',
                 msg_no_offer: 'לא הוחל מבצע.',
-                type_niche: 'ניש',
-                type_selective: 'סלקטיב',
                 type_men_prefix: 'גבר: ',
                 type_woman_prefix: 'אישה: ',
                 error_loading: 'אנו מצטערים, לא הצלחנו לטעון את נתוני הבשמים. אנא בדוק את החיבור שלך.'
@@ -299,7 +294,7 @@
         // ********** دالة تحديد اللغة **********
         function setLanguage() {
             const browserLang = navigator.language.substring(0, 2).toLowerCase();
-            if (browserLang === 'he') {
+            if (browserLang === 'he' || document.documentElement.lang === 'he') {
                 currentLang = 'he';
                 document.documentElement.setAttribute('lang', 'he');
                 document.documentElement.setAttribute('dir', 'rtl');
@@ -325,10 +320,8 @@
             document.getElementById('floating-whatsapp').href = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(t.whatsapp_float)}`;
         }
 
-
         // ********** منطق إدارة السلة **********
         
-        // دالة حذف عنصر من السلة
         function removeItemFromCart(index) {
             cart.splice(index, 1);
             updateCartAndOffers();
@@ -393,7 +386,6 @@
         }
         
         function updateCartAndOffers() {
-            // ... (منطق العروض) ...
             cart.forEach(item => {
                 if (item.type.startsWith('selective')) {
                     item.finalPrice = item.basePrice; 
@@ -424,7 +416,6 @@
             renderCartSummary();
         }
 
-        // دالة لعرض ملخص السلة (تم التعديل لإضافة زر الحذف)
         function renderCartSummary() {
             const cartList = document.getElementById('cart-list');
             const totalPriceDisplay = document.getElementById('total-price-display');
@@ -458,7 +449,6 @@
                 cartList.appendChild(li);
             });
 
-            // إضافة رسوم التوصيل
             let finalTotal = subtotal;
             if (subtotal > 0) {
                 finalTotal += SHIPPING_FEE;
@@ -471,7 +461,6 @@
             document.getElementById('whatsapp-send-button').disabled = (cart.length === 0);
         }
 
-        // دالة معالجة بيانات الشيت (المُرسلة منك)
         function fetchAndProcessProducts() {
             $.get(SHEET_URL, function (response) {
                 try {
@@ -487,11 +476,10 @@
                         if (sheetRowNumber > 289) break; 
                         
                         const row = rows[i].c;
-                        // قراءة الأعمدة بناءً على الترتيب الفعلي (C0, C1, C5, C3)
-                        const productName = row[0]?.v || '';     // C0
-                        const productCategoryRaw = row[1]?.v || ''; // C1 (الوصف)
-                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2
-                        const productImageLink = row[3]?.v || ''; // C3
+
+                        const productName = row[0]?.v || '';     
+                        const productPriceC2 = parseFloat(row[2]?.v) || 0; 
+                        const productImageLink = row[3]?.v || ''; 
                         const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
                         
                         const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
@@ -499,22 +487,20 @@
                         if (!productName || finalPrice === 0) continue; 
                         
                         let type = '';
+                        let namePrefix = '';
                         
                         // *** منطق التصنيف بناءً على رقم السطر ***
                         if (sheetRowNumber >= ROWS_RANGES.niche.start && sheetRowNumber <= ROWS_RANGES.niche.end) {
                             type = 'niche';
                         } else if (sheetRowNumber >= ROWS_RANGES.selective_men.start && sheetRowNumber <= ROWS_RANGES.selective_men.end) {
                             type = 'selective_men';
+                            namePrefix = DICT[currentLang].type_men_prefix;
                         } else if (sheetRowNumber >= ROWS_RANGES.selective_woman.start && sheetRowNumber <= ROWS_RANGES.selective_woman.end) {
                             type = 'selective_woman';
+                            namePrefix = DICT[currentLang].type_woman_prefix;
                         } else {
                             continue;
                         }
-                        
-                        // تطبيق بادئة اللغة (تتم هنا بعد تحديد النوع)
-                        let namePrefix = '';
-                        if (type === 'selective_men') namePrefix = DICT[currentLang].type_men_prefix;
-                        if (type === 'selective_woman') namePrefix = DICT[currentLang].type_woman_prefix;
 
                         processedProducts.push({
                             id: productName.substring(0, 50) + '-' + sheetRowNumber,
@@ -527,7 +513,6 @@
 
                     allPerfumes = processedProducts;
                     renderPerfumes();
-                    document.getElementById('whatsapp-send-button').disabled = false;
 
                 } catch (e) {
                     console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
@@ -565,7 +550,7 @@
                     priceText = item.basePrice.toFixed(2) + CURRENCY_SYMBOL;
                 }
 
-                message += `\n- ${item.name}: ${priceText}`;
+                message += `\n- ${item.name} (${item.type.includes('niche') ? t.type_niche : t.type_selective}): ${priceText}`;
             });
             
             finalTotal = subtotal + SHIPPING_FEE;
@@ -582,7 +567,7 @@
             message += offerSummary;
             
             message += `\n\n====================\n`;
-            message += `🚚 ${t.shipping_text}: ${SHIPPING_FEE.toFixed(2)}${CURRENCY_SYMBOL}`;
+            message += `🚚 ${t.shipping_text}`;
             message += `\n💵 *${t.total_text}* ${finalTotal.toFixed(2)}${CURRENCY_SYMBOL}`;
             
             const pageUrl = window.location.href; 
@@ -594,7 +579,7 @@
         }
 
         // تشغيل جلب البيانات عند تحميل الصفحة
-        window.removeItemFromCart = removeItemFromCart; // لجعل الدالة متاحة للزر في HTML
+        window.removeItemFromCart = removeItemFromCart; 
         
         document.addEventListener('DOMContentLoaded', () => {
             setLanguage(); // 1. ضبط اللغة أولاً
