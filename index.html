@@ -6,6 +6,7 @@
     <title>عروض العطور النيش والسلكتف الحصرية</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         :root {
@@ -14,6 +15,7 @@
             --background-color: #f4f4f4;
             --cart-color: #fff8e1;
             --whatsapp-color: #25D366;
+            --whatsapp-floating-color: #1FAF59;
         }
 
         body { 
@@ -43,11 +45,23 @@
         
         /* إعداد قسم العرض الرئيسي (للعطور) */
         section { 
-            flex: 3; 
+            flex: 1; /* جعل القسم يملأ المساحة المتاحة في الديسكتوب */
             padding: 10px; 
             background: white; 
             border-radius: 8px; 
             margin-bottom: 20px; 
+        }
+
+        /* تنسيق العنوان التوضيحي */
+        .offer-message {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #c8e6c9;
         }
         
         /* تصميم الكاروسيل (عرض أفقي وقابل للتمرير) */
@@ -59,17 +73,16 @@
             gap: 12px;
             margin-top: 15px;
             -webkit-overflow-scrolling: touch;
-            /* إخفاء شريط التمرير الأفقي على المتصفحات */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
         }
-        .perfume-carousel::-webkit-scrollbar { /* Chrome, Safari, Opera */
+        .perfume-carousel::-webkit-scrollbar { 
             display: none;
         }
         
         .perfume-item { 
             flex: 0 0 auto; 
-            width: 150px; /* عرض مناسب للجوال */
+            width: 150px; 
             border: 1px solid #ddd; padding: 8px; text-align: center; background: #fff; border-radius: 6px; 
             scroll-snap-align: start; 
             transition: transform 0.2s; 
@@ -84,15 +97,15 @@
             margin-top: 5px; font-weight: bold; width: 100%; 
         }
 
-        /* تنسيق ملخص السلة للجوال والديسكتوب */
+        /* تنسيق ملخص السلة - ثابتة على الجوال */
         #cart-summary { 
+            position: sticky; /* الموقع الافتراضي للديسكتوب */
+            top: 10px; 
             flex: 1; 
             padding: 15px; 
             background: var(--cart-color); 
             border: 1px solid #ffecb3; 
             border-radius: 8px; 
-            position: sticky; 
-            top: 10px; 
             height: fit-content; 
             min-width: 250px; 
             margin-right: 20px; 
@@ -111,13 +124,34 @@
             font-size: 1.1em; font-weight: bold; 
         }
 
+        /* زر واتساب العائم */
+        #floating-whatsapp {
+            position: fixed;
+            bottom: 120px; /* فوق العربة المثبتة */
+            left: 15px;
+            background-color: var(--whatsapp-floating-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        #floating-whatsapp i {
+            font-size: 1.2em;
+            margin-left: 8px;
+        }
+
         /* ************************************** */
         /* تعديلات مخصصة للجوال (Mobile-Specific) */
         /* ************************************** */
         @media (max-width: 768px) {
             main { 
                 flex-direction: column; 
-                padding-bottom: 120px; /* لإعطاء مساحة للسلة الثابتة */
+                padding-bottom: 180px; /* مساحة أكبر للسلة الثابتة وزر الواتساب العائم */
             }
             
             section { 
@@ -127,12 +161,12 @@
             
             /* تثبيت السلة في أسفل الشاشة */
             #cart-summary {
-                position: fixed; /* تثبيت الموقع */
-                bottom: 0; /* في الأسفل */
+                position: fixed; 
+                bottom: 0; 
                 left: 0;
                 right: 0;
                 width: 100%;
-                z-index: 1000; /* لتبقى فوق كل شيء */
+                z-index: 1000; 
                 border-radius: 0;
                 margin-right: 0;
                 padding: 10px 15px;
@@ -145,21 +179,9 @@
                 overflow: hidden;
                 margin-bottom: 5px;
             }
-            #cart-summary h2 {
-                display: none; /* إخفاء العنوان لتوفير مساحة */
-            }
-
-            /* ترتيب عناصر ملخص السلة في سطر واحد لتكون مدمجة */
-            #cart-summary > h3, #whatsapp-send-button {
-                display: block;
-                width: 100%;
-                text-align: center;
-                margin: 5px 0;
-            }
             
-            #whatsapp-send-button {
-                font-size: 1em;
-                padding: 8px;
+            #cart-summary h2 {
+                display: none; 
             }
         }
     </style>
@@ -175,13 +197,17 @@
             <h2>جارٍ تحميل العطور...</h2>
         </section>
 
+        <a id="floating-whatsapp" href="https://wa.me/972522511749?text=%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AD%D8%B5%D9%88%D9%84%20%D8%B9%D9%84%D9%89%20%D8%B9%D8%B1%D8%B6%20%D8%A7%D9%84%D9%86%D9%8A%D8%B4%20%D8%A7%D9%84%D9%85%D9%85%D9%8A%D8%B2" target="_blank">
+            <i class="fab fa-whatsapp"></i> أرغب بالحصول على عرض النيش
+        </a>
+
         <aside id="cart-summary">
             <h2>🛒 ملخص السلة</h2>
             <ul id="cart-list"></ul>
             <h3>الإجمالي: <span id="total-price">0.00 ₪</span></h3>
             
             <button id="whatsapp-send-button" disabled>
-                أرسل لي الطلب عبر واتساب
+                إتمام الطلب وإرساله عبر واتساب
             </button>
             
             <p style="font-size: 0.85em; margin-top: 15px; color: #666;">* يتم تطبيق العرض تلقائيًا على أرخص عطر سلكتف في السلة.</p>
@@ -190,16 +216,9 @@
 
     <script>
         // ******************************************************
-        // 1. رابط JSON/GViz من ملف Google Sheet الخاص بك
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
-        
-        // 2. رقم الواتساب الخاص بك
         const PHONE_NUMBER = "972522511749"; 
-        
-        // 3. رمز العملة (الشيكل)
         const CURRENCY_SYMBOL = " ₪";
-
-        // 4. نطاقات الأسطر للتصنيف
         const ROWS_RANGES = {
             'selective_men': { start: 2, end: 109 },
             'selective_woman': { start: 110, end: 231 },
@@ -210,7 +229,6 @@
         let allPerfumes = [];
         let cart = [];
 
-        // دالة لإنشاء عنصر عطر HTML
         function createPerfumeItem(perfume) {
             const div = document.createElement('div');
             div.className = 'perfume-item';
@@ -220,8 +238,6 @@
             div.dataset.name = perfume.name;
 
             let imgUrl = perfume.image && perfume.image.trim() ? perfume.image : 'https://via.placeholder.com/180?text=No+Image';
-
-            // منطق تصحيح الرابط لضمان HTTPS
             if (imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
                 imgUrl = imgUrl.replace('http://', 'https://');
             }
@@ -235,7 +251,6 @@
             return div;
         }
 
-        // دالة عرض العطور في واجهة المستخدم
         function renderPerfumes() {
             const displaySection = document.getElementById('perfume-display');
             displaySection.innerHTML = ''; 
@@ -244,17 +259,17 @@
             const selectiveMenPerfumes = allPerfumes.filter(p => p.type === 'selective_men');
             const selectiveWomanPerfumes = allPerfumes.filter(p => p.type === 'selective_woman');
             
-            // 1. عرض عطور النيش (القسم الأول)
-            displaySection.innerHTML += '<h2>عطور النيش الفاخرة</h2><div class="perfume-carousel" id="niche-carousel"></div>';
+            // 1. عرض عطور النيش
+            displaySection.innerHTML += '<h2>قم باختيار عطر أو عطرين نيش للحصول على العرض:</h2><div class="perfume-carousel" id="niche-carousel"></div>';
             const nicheCarousel = document.getElementById('niche-carousel');
             nichePerfumes.forEach(p => nicheCarousel.appendChild(createPerfumeItem(p)));
 
-            // 2. عرض عطور سلكتف رجالي (القسم الثاني)
+            // 2. عرض عطور سلكتف رجالي
             displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف رجالي</h2><div class="perfume-carousel" id="selective-men-carousel"></div>';
             const selectiveMenCarousel = document.getElementById('selective-men-carousel');
             selectiveMenPerfumes.forEach(p => selectiveMenCarousel.appendChild(createPerfumeItem(p)));
             
-            // 3. عرض عطور سلكتف نسائي (القسم الثالث)
+            // 3. عرض عطور سلكتف نسائي
             displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف نسائي</h2><div class="perfume-carousel" id="selective-woman-carousel"></div>';
             const selectiveWomanCarousel = document.getElementById('selective-woman-carousel');
             selectiveWomanPerfumes.forEach(p => selectiveWomanCarousel.appendChild(createPerfumeItem(p)));
@@ -264,7 +279,6 @@
             });
         }
 
-        // دالة معالجة بيانات الشيت (المُرسلة منك)
         function fetchAndProcessProducts() {
             $.get(SHEET_URL, function (response) {
                 try {
@@ -274,27 +288,21 @@
 
                     const processedProducts = [];
 
-                    // تجاوز السطر الأول (رؤوس الأعمدة) ويبدأ عد الأسطر من 2 في الشيت
                     for (let i = 0; i < rows.length; i++) {
                         
-                        // السطر الفعلي في الشيت هو i + 2
                         const sheetRowNumber = i + 2; 
-                        
-                        // *** إيقاف المنتجات بعد السطر 289 ***
                         if (sheetRowNumber > 289) break; 
                         
                         const row = rows[i].c;
 
-                        // قراءة البيانات بناءً على مواقع الأعمدة في الشيت:
-                        const productName = row[0]?.v || '';     // C0 (العمود A)
-                        const productCategoryRaw = row[1]?.v || ''; // C1 (العمود B: الوصف)
-                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2 (العمود C)
-                        const productImageLink = row[3]?.v || ''; // C3 (العمود D)
-                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F: السعر)
+                        const productName = row[0]?.v || '';     // C0
+                        const productCategoryRaw = row[1]?.v || ''; // C1 (الوصف)
+                        const productPriceC2 = parseFloat(row[2]?.v) || 0; // C2
+                        const productImageLink = row[3]?.v || ''; // C3
+                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
                         
                         const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
 
-                        // تجاهل السطور التي لا تحتوي على اسم أو سعر صالح
                         if (!productName || finalPrice === 0) continue; 
                         
                         let type = '';
@@ -310,7 +318,7 @@
                             type = 'selective_woman';
                             namePrefix = 'نسائي: ';
                         } else {
-                            continue; // تجاهل أي سطر خارج النطاقات المحددة
+                            continue;
                         }
 
                         processedProducts.push({
@@ -318,7 +326,7 @@
                             name: namePrefix + productName,
                             price: finalPrice,
                             image: productImageLink,
-                            type: type // niche, selective_men, selective_woman
+                            type: type
                         });
                     }
 
@@ -333,7 +341,6 @@
             });
         }
         
-        // دالة إضافة عطر للسلة (محدثة)
         function addToCart(event) {
             const itemElement = event.target.closest('.perfume-item');
             if (!itemElement) return;
@@ -359,9 +366,7 @@
             updateCartAndOffers();
         }
 
-        // دالة تحديث العروض (المنطق المدمج)
         function updateCartAndOffers() {
-            // 1. إعادة تعيين أسعار السلكتف
             cart.forEach(item => {
                 if (item.type.startsWith('selective')) {
                     item.finalPrice = item.basePrice; 
@@ -370,25 +375,20 @@
                 }
             });
 
-            // 2. حساب عدد عطور النيش
             const nicheCount = cart.filter(item => item.type === 'niche').length;
 
-            // 3. تحديد أرخص عطر سلكتف في السلة لتطبيق العرض عليه
             let selectiveItems = cart
-                .filter(item => item.type.startsWith('selective')) // يشمل الرجل والنساء
+                .filter(item => item.type.startsWith('selective'))
                 .sort((a, b) => a.basePrice - b.basePrice); 
             
-            // تطبيق العرض على أرخص عطر سلكتف واحد فقط
             if (selectiveItems.length > 0) {
                 const cheapestSelective = selectiveItems[0]; 
 
                 if (nicheCount === 1) {
-                    // العرض الأول: 1 نيش = سلكتف بنصف السعر (50%)
                     cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
                     cheapestSelective.isDiscounted = true;
 
                 } else if (nicheCount >= 2) {
-                    // العرض الثاني: 2 نيش أو أكثر = سلكتف هدية مجانية (0₪)
                     cheapestSelective.finalPrice = 0;
                     cheapestSelective.isDiscounted = true;
                     cheapestSelective.isFreeGift = true;
@@ -397,7 +397,6 @@
             renderCartSummary();
         }
 
-        // دالة لعرض ملخص السلة
         function renderCartSummary() {
             const cartList = document.getElementById('cart-list');
             const totalPriceElement = document.getElementById('total-price');
@@ -427,7 +426,6 @@
             totalPriceElement.textContent = total.toFixed(2) + CURRENCY_SYMBOL;
         }
 
-        // دالة إرسال الطلب عبر واتساب
         function sendOrderViaWhatsApp() {
             if (cart.length === 0) {
                 alert("سلة المشتريات فارغة.");
@@ -474,7 +472,6 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // تشغيل جلب البيانات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             fetchAndProcessProducts();
             document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
