@@ -14,8 +14,26 @@
         main { display: flex; max-width: 1200px; margin: 20px auto; padding: 0 15px; flex-wrap: wrap; }
         section { flex: 3; padding: 20px; background: white; border-radius: 8px; margin-bottom: 20px; }
         #cart-summary { flex: 1; padding: 20px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; position: sticky; top: 20px; height: fit-content; min-width: 250px; margin-right: 20px; }
-        .perfume-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-        .perfume-item { border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; transition: transform 0.2s; }
+        
+        /* تصميم الكاروسيل (عرض أفقي وقابل للتمرير) */
+        .perfume-carousel { 
+            display: flex;
+            overflow-x: auto; /* تمكين التمرير الأفقي */
+            scroll-snap-type: x mandatory; /* لجعل التمرير أكثر سلاسة */
+            padding: 10px 0;
+            gap: 15px;
+            margin-top: 15px;
+            -webkit-overflow-scrolling: touch; /* تحسين تجربة التمرير على iOS */
+        }
+        
+        .perfume-item { 
+            flex: 0 0 auto; /* منع العناصر من التمدد وتحديد عرضها */
+            width: 180px; /* عرض ثابت لكل عنصر */
+            border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; 
+            scroll-snap-align: start; /* محاذاة كل عنصر مع بداية منطقة التمرير */
+            transition: transform 0.2s; 
+        }
+        
         .perfume-item:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .perfume-item img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
         .add-to-cart { background-color: #8d6e63; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; margin-top: 10px; font-weight: bold; width: 100%; }
@@ -44,7 +62,7 @@
         <aside id="cart-summary">
             <h2>🛒 ملخص السلة</h2>
             <ul id="cart-list"></ul>
-            <h3>الإجمالي: <span id="total-price">0.00$</span></h3>
+            <h3>الإجمالي: <span id="total-price">0.00 ₪</span></h3>
             
             <button id="whatsapp-send-button" disabled>
                 أرسل لي الطلب عبر واتساب
@@ -56,11 +74,21 @@
 
     <script>
         // ******************************************************
-        // 1. رابط JSON/GViz من ملف Google Sheet الخاص بك (الصيغة الصحيحة)
+        // 1. رابط JSON/GViz من ملف Google Sheet الخاص بك
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1g3_D2NBwT27O2OI-v1R5tAB2QCfF3_ZCUL9sSLoCv54/gviz/tq?tqx=out:json';
         
         // 2. رقم الواتساب الخاص بك
         const PHONE_NUMBER = "972522511749"; 
+        
+        // 3. رمز العملة (الشيكل)
+        const CURRENCY_SYMBOL = " ₪";
+
+        // 4. نطاقات الأسطر للتصنيف
+        const ROWS_RANGES = {
+            'selective_men': { start: 2, end: 109 },
+            'selective_woman': { start: 110, end: 231 },
+            'niche': { start: 232, end: 289 }
+        };
         // ******************************************************
 
         let allPerfumes = [];
@@ -85,7 +113,7 @@
             div.innerHTML = `
                 <img src="${imgUrl}" alt="${perfume.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
                 <h3>${perfume.name}</h3>
-                <p>السعر: ${perfume.price.toFixed(2)}$</p>
+                <p>السعر: ${perfume.price.toFixed(2)}${CURRENCY_SYMBOL}</p>
                 <button class="add-to-cart">أضف للسلة</button>
             `;
             return div;
@@ -97,19 +125,23 @@
             displaySection.innerHTML = ''; 
 
             const nichePerfumes = allPerfumes.filter(p => p.type === 'niche');
-            const selectivePerfumes = allPerfumes.filter(p => p.type === 'selective');
+            const selectiveMenPerfumes = allPerfumes.filter(p => p.type === 'selective_men');
+            const selectiveWomanPerfumes = allPerfumes.filter(p => p.type === 'selective_woman');
+            
+            // 1. عرض عطور النيش (القسم الأول)
+            displaySection.innerHTML += '<h2>عطور النيش الفاخرة</h2><div class="perfume-carousel" id="niche-carousel"></div>';
+            const nicheCarousel = document.getElementById('niche-carousel');
+            nichePerfumes.forEach(p => nicheCarousel.appendChild(createPerfumeItem(p)));
 
-            // 1. عرض عطور النيش
-            displaySection.innerHTML += '<h2>عطور النيش الفاخرة</h2><div class="perfume-grid" id="niche-grid"></div>';
-            const nicheGrid = document.getElementById('niche-grid');
-            if (nichePerfumes.length === 0) { nicheGrid.innerHTML = '<p>لا توجد عطور نيش متوفرة حالياً.</p>'; }
-            nichePerfumes.forEach(p => nicheGrid.appendChild(createPerfumeItem(p)));
-
-            // 2. عرض عطور السلكتف
-            displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور السلكتف (نسائية ورجالية)</h2><p>يمكن تطبيق العرض على أي عطر من هذه المجموعة.</p><div class="perfume-grid" id="selective-grid"></div>';
-            const selectiveGrid = document.getElementById('selective-grid');
-            if (selectivePerfumes.length === 0) { selectiveGrid.innerHTML = '<p>لا توجد عطور سلكتف متوفرة حالياً.</p>'; }
-            selectivePerfumes.forEach(p => selectiveGrid.appendChild(createPerfumeItem(p)));
+            // 2. عرض عطور سلكتف رجالي (القسم الثاني)
+            displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف رجالي</h2><div class="perfume-carousel" id="selective-men-carousel"></div>';
+            const selectiveMenCarousel = document.getElementById('selective-men-carousel');
+            selectiveMenPerfumes.forEach(p => selectiveMenCarousel.appendChild(createPerfumeItem(p)));
+            
+            // 3. عرض عطور سلكتف نسائي (القسم الثالث)
+            displaySection.innerHTML += '<hr style="margin: 30px 0;"><h2>عطور سلكتف نسائي</h2><div class="perfume-carousel" id="selective-woman-carousel"></div>';
+            const selectiveWomanCarousel = document.getElementById('selective-woman-carousel');
+            selectiveWomanPerfumes.forEach(p => selectiveWomanCarousel.appendChild(createPerfumeItem(p)));
 
             document.querySelectorAll('.add-to-cart').forEach(button => {
                 button.addEventListener('click', addToCart);
@@ -120,55 +152,71 @@
         function fetchAndProcessProducts() {
             $.get(SHEET_URL, function (response) {
                 try {
-                    // استخراج كائن JSON من استجابة Google Visualization
                     const jsonText = response.match(/google\.visualization\.Query\.setResponse\((.*)\)/)[1];
                     const jsonData = JSON.parse(jsonText);
                     const rows = jsonData.table.rows;
 
                     const processedProducts = [];
 
-                    // تجاوز السطر الأول (رؤوس الأعمدة)
-                    for (let i = 0; i < rows.length; i++) { // هنا i=0 لأن الاستجابة لا تتضمن رؤوس
+                    // 💡 ملاحظة الأعمدة بناءً على الترتيب المشترك في الشيتات
+                    // C0: Name | C1: Description/Category | C2: Price | C3: Image Link | ... | C5: Price (العمود F)
+                    
+                    // تجاوز السطر الأول (رؤوس الأعمدة) ويبدأ عد الأسطر من 2 في الشيت
+                    for (let i = 0; i < rows.length; i++) {
+                        
+                        // السطر الفعلي في الشيت هو i + 2
+                        const sheetRowNumber = i + 2; 
+                        
+                        // *** إيقاف المنتجات بعد السطر 289 ***
+                        if (sheetRowNumber > 289) break; 
+                        
                         const row = rows[i].c;
 
-                        // القراءة بناءً على مواقع الأعمدة في الشيت:
-                        const productName = row[0]?.v || '';     // C0
-                        const productCategoryRaw = row[1]?.v || ''; // C1 (يجب أن يحتوي على NICHE, MEN, WOMAN)
-                        const productPrice = parseFloat(row[2]?.v) || 0; // C2
-                        const productImageLink = row[3]?.v || ''; // C3
+                        // قراءة البيانات وتجنب الأخطاء عند وجود خلايا فارغة
+                        const productName = row[0]?.v || 'عطر غير مسمى';     
+                        const productCategoryRaw = row[1]?.v || ''; 
+                        const productPriceC2 = parseFloat(row[2]?.v) || 0; 
+                        const productImageLink = row[3]?.v || ''; 
+                        const priceFromF = parseFloat(row[5]?.v) || 0; // C5 (العمود F)
+                        
+                        // نستخدم السعر من العمود F (C5) كما طلبت، ونتجاهل السعر في C2 إذا كان F صالحاً
+                        const finalPrice = priceFromF > 0 ? priceFromF : productPriceC2;
 
                         // تجاهل السطور التي لا تحتوي على اسم أو سعر صالح
-                        if (!productName || productPrice === 0) continue; 
+                        if (!productName || finalPrice === 0) continue; 
                         
-                        const categoryLower = productCategoryRaw.toLowerCase();
-                        let type = 'selective';
+                        let type = '';
                         let namePrefix = '';
-
-                        if (categoryLower.includes('niche')) {
+                        
+                        // *** منطق التصنيف بناءً على رقم السطر ***
+                        if (sheetRowNumber >= ROWS_RANGES.niche.start && sheetRowNumber <= ROWS_RANGES.niche.end) {
                             type = 'niche';
-                        } else if (categoryLower.includes('woman')) {
-                            namePrefix = 'نسائي: ';
-                        } else if (categoryLower.includes('men')) {
+                        } else if (sheetRowNumber >= ROWS_RANGES.selective_men.start && sheetRowNumber <= ROWS_RANGES.selective_men.end) {
+                            type = 'selective_men';
                             namePrefix = 'رجالي: ';
+                        } else if (sheetRowNumber >= ROWS_RANGES.selective_woman.start && sheetRowNumber <= ROWS_RANGES.selective_woman.end) {
+                            type = 'selective_woman';
+                            namePrefix = 'نسائي: ';
+                        } else {
+                            continue; // تجاهل أي سطر خارج النطاقات المحددة
                         }
 
                         processedProducts.push({
-                            id: productName.substring(0, 50), // استخدام جزء من الاسم كمعرف ID
+                            id: productName.substring(0, 50) + '-' + sheetRowNumber,
                             name: namePrefix + productName,
-                            price: productPrice,
+                            price: finalPrice,
                             image: productImageLink,
-                            type: type
+                            type: type // niche, selective_men, selective_woman
                         });
                     }
 
                     allPerfumes = processedProducts;
                     renderPerfumes();
-                    document.getElementById('perfume-display').querySelector('h2').textContent = 'العطور المتوفرة';
                     document.getElementById('whatsapp-send-button').disabled = false;
 
                 } catch (e) {
                     console.error("حدث خطأ أثناء معالجة بيانات الشيت:", e);
-                    document.getElementById('perfume-display').innerHTML = '<h2>عذراً، لم نتمكن من تحميل بيانات العطور. تحقق من رابط الشيت و صلاحية الأعمدة (C0, C1, C2, C3).</h2>';
+                    document.getElementById('perfume-display').innerHTML = '<h2>عذراً، لم نتمكن من تحميل بيانات العطور. تحقق من رابط الشيت وصلاحية الأعمدة.</h2>';
                 }
             });
         }
@@ -179,9 +227,15 @@
             if (!itemElement) return;
 
             const itemId = itemElement.dataset.id;
+            
+            // تحقق من وجود المنتج بالفعل (مهم للتحقق من العروض)
+            // إذا كان المستخدم يضيف سلكتف، يمكن السماح بالتكرار بعد العرض المجاني
+            // لكن هنا نكتفي بالمنطق البسيط: لا تكرر نفس العطر بنفس المعرف
             if (cart.some(item => item.id === itemId)) {
-                alert("هذا العطر مضاف بالفعل إلى السلة.");
-                return;
+                 // للسماح بإضافة السلكتف بعد العرض المجاني، سنقوم بتغيير المعرف
+                 // لكن سنبقي على المنطق الحالي لعدم التعقيد
+                 alert("هذا العطر مضاف بالفعل إلى السلة.");
+                 return;
             }
 
             const item = {
@@ -190,38 +244,54 @@
                 type: itemElement.dataset.type,
                 basePrice: parseFloat(itemElement.dataset.price),
                 finalPrice: parseFloat(itemElement.dataset.price),
-                isDiscounted: false 
+                isDiscounted: false,
+                isFreeGift: false // مؤشر للهدية المجانية أو خصم 50%
             };
             
             cart.push(item);
             updateCartAndOffers();
         }
 
-        // دالة تحديث العروض (محدثة)
+        // دالة تحديث العروض (المنطق المدمج)
         function updateCartAndOffers() {
+            // 1. إعادة تعيين أسعار السلكتف
             cart.forEach(item => {
-                if (item.type === 'selective') {
+                if (item.type.startsWith('selective')) {
                     item.finalPrice = item.basePrice; 
                     item.isDiscounted = false;
+                    item.isFreeGift = false;
                 }
             });
 
+            // 2. حساب عدد عطور النيش
             const nicheCount = cart.filter(item => item.type === 'niche').length;
 
+            // 3. تحديد أرخص عطر سلكتف في السلة لتطبيق العرض عليه
             let selectiveItems = cart
-                .filter(item => item.type === 'selective')
+                .filter(item => item.type.startsWith('selective')) // يشمل الرجل والنساء
                 .sort((a, b) => a.basePrice - b.basePrice); 
-
+            
+            // تطبيق العرض على أرخص عطر سلكتف واحد فقط
             if (selectiveItems.length > 0) {
                 const cheapestSelective = selectiveItems[0]; 
 
                 if (nicheCount === 1) {
+                    // العرض الأول: 1 نيش = سلكتف بنصف السعر (50%)
                     cheapestSelective.finalPrice = cheapestSelective.basePrice / 2;
                     cheapestSelective.isDiscounted = true;
+                    cheapestSelective.isFreeGift = false;
 
                 } else if (nicheCount >= 2) {
+                    // العرض الثاني: 2 نيش أو أكثر = سلكتف هدية مجانية (0$)
                     cheapestSelective.finalPrice = 0;
                     cheapestSelective.isDiscounted = true;
+                    cheapestSelective.isFreeGift = true;
+                }
+
+                // 4. تطبيق السعر العادي على أي عطور سلكتف أخرى مضافة بعد العرض المجاني
+                if (nicheCount >= 2 && selectiveItems.length > 1) {
+                    // العطر الأول هو مجاني (تم التعامل معه أعلاه)
+                    // باقي عطور السلكتف تبقى بالسعر الأصلي (وهو ما تم في الخطوة 1)
                 }
             }
             renderCartSummary();
@@ -238,23 +308,23 @@
                 total += item.finalPrice;
                 const li = document.createElement('li');
                 
-                let priceText = `${item.finalPrice.toFixed(2)}$`;
+                let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
 
                 if (item.isDiscounted) {
-                    if (item.finalPrice === 0) {
-                        priceText = `<span class="gift">هدية مجانية!</span> <del>${item.basePrice.toFixed(2)}$</del>`;
+                    if (item.isFreeGift) {
+                        priceText = `<span class="gift">هدية مجانية!</span> <del>${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}</del>`;
                     } else {
-                        priceText = `<span class="discount">${priceText}</span> <del>${item.basePrice.toFixed(2)}$</del> (خصم 50%)`;
+                        priceText = `<span class="discount">${priceText}</span> <del>${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}</del> (خصم 50%)`;
                     }
                 } else {
-                    priceText = `${item.basePrice.toFixed(2)}$`;
+                    priceText = `${item.basePrice.toFixed(2)}${CURRENCY_SYMBOL}`;
                 }
 
-                li.innerHTML = `<strong>${item.name}</strong> (${item.type === 'niche' ? 'نيش' : 'سلكتف'}): ${priceText}`;
+                li.innerHTML = `<strong>${item.name}</strong> (${item.type.includes('niche') ? 'نيش' : 'سلكتف'}): ${priceText}`;
                 cartList.appendChild(li);
             });
 
-            totalPriceElement.textContent = total.toFixed(2) + '$';
+            totalPriceElement.textContent = total.toFixed(2) + CURRENCY_SYMBOL;
         }
 
         // دالة إرسال الطلب عبر واتساب
@@ -270,17 +340,17 @@
 
             cart.forEach(item => {
                 total += item.finalPrice;
-                let priceText = `${item.finalPrice.toFixed(2)}$`;
+                let priceText = `${item.finalPrice.toFixed(2)}${CURRENCY_SYMBOL}`;
 
                 if (item.isDiscounted) {
                     priceText = (item.finalPrice === 0) 
                                 ? "🎁 *هدية مجانية*"
-                                : "💰 *" + item.finalPrice.toFixed(2) + "$* (خصم 50%)";
+                                : "💰 *" + item.finalPrice.toFixed(2) + CURRENCY_SYMBOL + "* (خصم 50%)";
                 } else {
-                    priceText = item.basePrice.toFixed(2) + "$";
+                    priceText = item.basePrice.toFixed(2) + CURRENCY_SYMBOL;
                 }
 
-                message += `\n- ${item.name} (${item.type === 'niche' ? 'نيش' : 'سلكتف'}): ${priceText}`;
+                message += `\n- ${item.name} (${item.type.includes('niche') ? 'نيش' : 'سلكتف'}): ${priceText}`;
             });
 
             let offerSummary = "\n\n*2. ملخص العرض:*";
@@ -294,7 +364,7 @@
             message += offerSummary;
             
             message += `\n\n====================\n`;
-            message += `💵 *الإجمالي النهائي:* ${total.toFixed(2)}$`;
+            message += `💵 *الإجمالي النهائي:* ${total.toFixed(2)}${CURRENCY_SYMBOL}`;
             
             const pageUrl = window.location.href; 
             message += `\n\nلإتمام الطلب ورؤية الصور، يرجى الرد على هذه الرسالة.\n(رابط الطلب: ${pageUrl})`;
