@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عروض العطور النيش والسلكتف</title>
+    <title>عروض العطور النيش والسلكتف الحصرية</title>
     
     <style>
         body { font-family: Tahoma, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
@@ -13,7 +13,8 @@
         section { flex: 3; padding: 20px; background: white; border-radius: 8px; margin-bottom: 20px; }
         #cart-summary { flex: 1; padding: 20px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; position: sticky; top: 20px; height: fit-content; min-width: 250px; margin-right: 20px; }
         .perfume-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-        .perfume-item { border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; }
+        .perfume-item { border: 1px solid #ddd; padding: 10px; text-align: center; background: #fff; border-radius: 6px; transition: transform 0.2s; }
+        .perfume-item:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .perfume-item img { width: 100%; height: auto; max-height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
         .add-to-cart { background-color: #8d6e63; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; margin-top: 10px; font-weight: bold; width: 100%; }
         #cart-list { list-style: none; padding: 0; }
@@ -53,11 +54,11 @@
 
     <script>
         // ******************************************************
-        // 1. رابط CSV الصحيح من ملفك
+        // 1. رابط CSV من ملف Google Sheet الخاص بك (مجهز وصحيح)
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWJMujOko7GbRtvG94b1bNA3TEeSNh7aL4AJFOazRcdlbGEThnkevfzuJXdSpo0ym8xK3KveAK_m0_/pub?output=csv"; 
         
-        // 2. رقم الواتساب (يرجى تعديله إلى رقمك الفعلي)
-        const PHONE_NUMBER = "9725xxxxxxxx"; // مثال: 972545555555
+        // 2. رقم الواتساب الخاص بك (مجهز وصحيح)
+        const PHONE_NUMBER = "972522511749"; 
         // ******************************************************
 
         let allPerfumes = [];
@@ -66,35 +67,39 @@
         // دالة لتحويل بيانات CSV إلى مصفوفة JavaScript
         function csvToArray(csv) {
             const lines = csv.split('\n');
-            // نحتاج لـ trim() لإزالة أي مسافات بيضاء غير ضرورية
             const headers = lines[0].split(',').map(h => h.trim()); 
             const result = [];
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
-                const obj = {};
-                // نستخدم التعبير العادي لتقسيم السطور مع الأخذ في الاعتبار الفواصل داخل علامات الاقتباس
+                // استخدام التعبير العادي لتقسيم السطور بذكاء (لأخذ في الاعتبار الفواصل داخل الأسماء)
                 const currentline = lines[i].match(/(".*?"|[^",\s]+)(?=\s*\,|\s*$)/g);
                 if (!currentline) continue;
                 
+                const obj = {};
                 for (let j = 0; j < headers.length; j++) {
                     let value = (currentline[j] || "").replace(/"/g, "").trim();
-                    if (headers[j] === 'Price' || headers[j] === 'website price') {
-                        // استخدام "website price" كما هو موجود في الشيت الخاص بك، وتحويله إلى رقم
-                        obj.Price = parseFloat(value);
-                    } else if (headers[j] === 'ImageURL' || headers[j] === 'imge link') {
-                        // استخدام "imge link" كما هو موجود في الشيت الخاص بك
-                        obj.ImageURL = value;
-                    } else if (headers[j] === 'Code' || headers[j] === 'ID') {
+                    
+                    // تعيين القيم الرئيسية بناءً على الأعمدة الأكثر شيوعاً (أو الأعمدة الموجودة في الشيت الخاص بك)
+                    if (headers[j] === 'Code' || headers[j] === 'ID') {
                         obj.ID = value;
                     } else if (headers[j] === 'Description' || headers[j] === 'Name') {
                         obj.Name = value;
-                    } else if (headers[j] === 'Type') {
-                        // قد تحتاج لتحديث هذا العمود يدوياً في الشيت إذا لم يكن موجوداً
+                    } else if (headers[j] === 'Type' || headers[j] === 'Category') { // تم إضافة 'Category' كبديل
                         obj.Type = value; 
+                    } else if (headers[j] === 'website price' || headers[j] === 'Price') {
+                        obj.Price = parseFloat(value);
+                    } else if (headers[j] === 'imge link' || headers[j] === 'ImageURL') {
+                        obj.ImageURL = value;
                     }
                 }
-                // إضافة منطق بسيط للتحقق من النوع والاسم والسعر قبل الإضافة
-                if (obj.ID && obj.Name && !isNaN(obj.Price) && obj.Type) {
+                
+                // التأكد من أن التصنيف موجود (افتراضياً 'selective' إذا كان مفقوداً)
+                if (!obj.Type) {
+                    obj.Type = 'selective'; 
+                }
+                
+                // التأكد من أن العناصر الأساسية موجودة وصالحة قبل الإضافة
+                if (obj.ID && obj.Name && !isNaN(obj.Price) && obj.Price > 0) {
                     result.push(obj);
                 }
             }
@@ -109,23 +114,21 @@
                 const csvText = await response.text();
                 allPerfumes = csvToArray(csvText);
                 
-                // تنقية وتحضير البيانات بناءً على الفئات
+                // تحضير البيانات لضمان أن التصنيف niche أو selective
                 allPerfumes = allPerfumes.map(p => ({
                     ID: p.ID,
                     Name: p.Name,
-                    // سنفترض أن عمود 'Description' أو عمود إضافي يحتوي على 'niche' أو 'selective'. 
-                    // إذا لم يكن كذلك، سيتم فرزها بناءً على محتواها الحالي.
-                    Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', 
+                    Type: p.Type.toLowerCase().includes('niche') ? 'niche' : 'selective', // ضمان فرز جميع العطور التي تحمل كلمة 'niche'
                     Price: p.Price,
                     ImageURL: p.ImageURL
-                })).filter(p => !isNaN(p.Price) && p.Price > 0); // تصفية العناصر ذات السعر غير الصالح
+                })).filter(p => !isNaN(p.Price) && p.Price > 0); 
 
                 renderPerfumes();
                 document.getElementById('perfume-display').querySelector('h2').textContent = 'العطور المتوفرة';
                 document.getElementById('whatsapp-send-button').disabled = false;
             } catch (error) {
                 console.error("خطأ في تحميل العطور:", error);
-                document.getElementById('perfume-display').innerHTML = '<h2>عذراً، حدث خطأ في تحميل بيانات العطور. يرجى التحقق من رابط الشيت.</h2>';
+                document.getElementById('perfume-display').innerHTML = '<h2>عذراً، حدث خطأ في تحميل بيانات العطور. يرجى التحقق من رابط الشيت أو إعدادات النشر.</h2>';
             }
         }
 
@@ -163,8 +166,10 @@
             div.dataset.price = perfume.Price;
             div.dataset.name = perfume.Name;
 
+            const imgUrl = perfume.ImageURL && perfume.ImageURL.trim() ? perfume.ImageURL : 'https://via.placeholder.com/180?text=No+Image';
+
             div.innerHTML = `
-                <img src="${perfume.ImageURL}" alt="${perfume.Name}" onerror="this.src='';">
+                <img src="${imgUrl}" alt="${perfume.Name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/180?text=No+Image';">
                 <h3>${perfume.Name}</h3>
                 <p>السعر: ${perfume.Price.toFixed(2)}$</p>
                 <button class="add-to-cart">أضف للسلة</button>
@@ -172,7 +177,7 @@
             return div;
         }
 
-        // دالة إضافة عطر للسلة (محدثة)
+        // دالة إضافة عطر للسلة
         function addToCart(event) {
             const itemElement = event.target.closest('.perfume-item');
             if (!itemElement) return;
@@ -196,7 +201,7 @@
             updateCartAndOffers();
         }
 
-        // دالة تحديث العروض (محدثة)
+        // دالة تحديث العروض
         function updateCartAndOffers() {
             cart.forEach(item => {
                 if (item.type === 'selective') {
@@ -303,7 +308,7 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // تشغيل جلب البيانات عند تحميل الصفحة
+        // تشغيل جلب البيانات عند تحميل الصفحة وربط زر الواتساب
         document.addEventListener('DOMContentLoaded', () => {
             fetchPerfumes();
             document.getElementById('whatsapp-send-button').addEventListener('click', sendOrderViaWhatsApp);
